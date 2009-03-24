@@ -1,0 +1,3 @@
+www/sources/*.cache
+www/nzb/NZBCookies.*.php
+config.user.php

@@ -8,6 +8,7 @@
 	addCLIParam('b', 'background', 'Fork');
 	addCLIParam('r', 'reindex', 'Force a manual reindex, then exit');
 	addCLIParam('a', 'autotv', 'Run a manual AutoTV check, then exit');
+	addCLIParam('', 'pid', 'Specify an alternative PID file.', true);
 	
 	$cli = parseCLIParams($_SERVER['argv']);
 	if (isset($cli['help'])) {

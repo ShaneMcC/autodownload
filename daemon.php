@@ -12,24 +12,12 @@
 	addCLIParam('', 'noautotv', 'Don\'t periodically run AutoTV checks.');
 	addCLIParam('', 'pid', 'Specify an alternative PID file.', true);
 	
-	$cli = parseCLIParams($_SERVER['argv']);
-	if (isset($cli['help'])) {
+	$daemon['cli'] = parseCLIParams($_SERVER['argv']);
+	if (isset($daemon['cli']['help'])) {
 		echo 'Usage: ', $_SERVER['argv'][0], ' [options]', CRLF, CRLF;
 		echo 'Options:', CRLF, CRLF;
 		echo showCLIParams(), CRLF;
 		die();
-	}
-	
-	// Start the daemon so that it loops every 5 seconds.
-	$fork = $config['daemon']['fork'];
-	if (isset($cli['foreground'])) { $fork = false; }
-	if (isset($cli['background'])) { $fork = true; }
-	$pid = (isset($cli['pid'])) ? $cli['pid']['values'][count($cli['pid']['values'])-1] : $config['daemon']['pid'];
-	$daemonise = true;
-	if (isset($cli['reindex'])) { $daemonise = false; handleReindex(); }
-	if (isset($cli['autotv'])) { $daemonise = false; handleCheckAuto(); }
-	if ($daemonise) {
-		startDaemon($pid, $fork, doDaemonLoop, (5 * 1000), __FILE__);
 	}
 	
 	/**
@@ -39,8 +27,7 @@
 	 * @param $args Array of arguments for this callback
 	 */
 	function doDaemonLoop($type, $args) {
-		global $__daemontools;
-		
+		// global $__daemontools;
 		// echo 'doDaemonLoop: ', $__daemontools['callbacks'][$type]['description'], CRLF;
 		
 		switch ($type) {
@@ -72,7 +59,49 @@
 	 * Handle the loop from startDaemon.
 	 */
 	function handleLoop() {
-		doEcho('Loop;'.CRLF);
+		global $config, $daemon;
+		echo 'Loop', CRLF;
+
+		foreach ($config['times'] as $time => $format) {
+			// Get the time from the previous loop
+			$last[$time] = (isset($daemon['time'][$time])) ? $daemon['time'][$time] : 0;
+			// Get the current time.
+			$this[$time] = date($format);
+			
+			// Store if the time changed
+			$changed[$time] = ($this[$time] != $last[$time]);
+			// Store the time for the next loop
+			$daemon['time'][$time] = $this[$time];
+		}
+		
+		foreach ($config['times'] as $time => $format) {
+			if ($changed[$time] && function_exists('handle'.ucfirst($time).'Changed')) {
+				@call_user_func('handle'.ucfirst($time).'Changed', $last, $this);
+			}
+		}
+		
+		echo 'End Loop', CRLF;
+	}
+	
+	/**
+	 * Handle the Minute changing.
+	 *
+	 * @param $last The last time the loop ran.
+	 * @param $this The time now.
+	 */
+	function handleMinuteChanged($last, $this) {
+		global $config, $daemon;
+		
+		// Check if its time to run autotv
+		if (!isset($daemon['cli']['noautotv']) && checkTimeArray($config['daemon']['autotv']['times'], $this)) {
+			handleCheckAuto();
+		}
+		
+		// Check if its time to run reindex
+		if (!isset($daemon['cli']['noreindex']) && checkTimeArray($config['daemon']['reindex']['times'], $this)) {
+			echo 'Reindex time!';
+			handleReindex();
+		}
 	}
 	
 	/**
@@ -124,5 +153,23 @@
 				}
 			}
 		}
+	}
+	
+	// Should we fork?
+	$fork = $config['daemon']['fork'];
+	if (isset($daemon['cli']['foreground'])) { $fork = false; }
+	if (isset($daemon['cli']['background'])) { $fork = true; }
+	
+	// Where should we store the pid?
+	$pid = (isset($daemon['cli']['pid'])) ? $daemon['cli']['pid']['values'][count($daemon['cli']['pid']['values'])-1] : $config['daemon']['pid'];
+	
+	// Should the daemon loop be started?
+	$daemonise = true;
+	if (isset($daemon['cli']['reindex'])) { $daemonise = false; handleReindex(); }
+	if (isset($daemon['cli']['autotv'])) { $daemonise = false; handleCheckAuto(); }
+	
+	// Start the daemon so that it loops every 5 seconds.
+	if ($daemonise) {
+		startDaemon($pid, $fork, doDaemonLoop, (5 * 1000), __FILE__);
 	}
 ?>

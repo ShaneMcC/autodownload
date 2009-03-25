@@ -232,6 +232,7 @@
 		$pid = file_get_contents($file);
 		
 		// Check that the PID exists
+		// This will return false on non-linux based systems.
 		if (!file_exists('/proc/'.$pid.'/')) { return false; }
 		
 		// Now check to see if the PID is actaully us (incase the PID was reused by

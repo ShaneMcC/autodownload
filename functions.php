@@ -200,6 +200,49 @@
 	}
 	
 	/**
+	 * Check if a time array is a time in the time array given.
+	 *
+	 * @param $check Time array to check
+	 * @param $this (Default = array()) Time to check. If empty or null, "now" is
+	 *              assumed. If a time array is incomplete, values from "now" will
+	 *              be used to complete it.
+	 * @return True if the time array and check match.
+	 */
+	function checkTimeArray($check, $this = array()) {
+		global $config;
+		
+		if ($this == null) { $this = array(); }
+		
+		// Loop through every time array in the check array
+		foreach ($check as $time) {
+			$result = true;
+			// Loop through every time type, timename is 'hour', 'day' etc
+			foreach ($config['times'] as $timename => $format) {
+				// Check if the time array cares about matching this timename
+				if (isset($time[$timename])) {
+					// If it does, check that the value of the current time is in the
+					// array.
+					$array = is_array($time[$timename]) ? $time[$timename] : preg_split('@[^0-9]+@', $time[$timename]);
+					if (!isset($this[$timename])) { $this[$timename] = date($format); }
+					if (!in_array($this[$timename], $array)) {
+						// Not in the array, set the result to false, and break this loop,
+						// no point checking any further.
+						$result = false;
+						break;
+					}
+				}
+			}
+			
+			// Either this time array had no times, or they all matched.
+			// Either way, its technically a match.
+			if ($result) { return true; }
+		}
+		
+		// If we get here, then none of the time arrays matched, so return false.
+		return false;
+	}
+	
+	/**
 	 * Get the index for the optimal download from the given list.
 	 *
 	 * @param $matches List of search results.

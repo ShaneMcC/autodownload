@@ -1,17 +1,24 @@
 <?php
 	//----------------------------------------------------------------------------
-	// Misc defines
-	//----------------------------------------------------------------------------
-	define('CRLF', "\r\n");
-	define('EOL', '<br>'.CRLF);
-
-	//----------------------------------------------------------------------------
-	// Indexing daemon config settings
+	// Daemon config settings
 	//----------------------------------------------------------------------------
 	// Pid File
 	$config['daemon']['pid'] = dirname(__FILE__).'/daemon.pid';
 	// Should the daemon fork?
 	$config['daemon']['fork'] = false;
+	// Times that the daemon should check for new TV.
+	// This is an array containing "time arrays".
+	// "time arrays" are arrays with keys corresponding to the values of
+	// $config['times'] (see "Misc Defines" section).
+	// The values for each of the timenames should be a string of numbers
+	// separated by any non-numeric value.
+	// Example: array(array('hour' => '03,04,05,06,09', 'minute' => '00,30'));
+	// This is checked every minute
+	$config['daemon']['autotv']['times'] = array(array('hour' => '03,04,05,06,09', 'minute' => '00,30'),
+	                                             array('hour' => '02,23', 'minute' => '30'),
+	                                            );
+	// Same as above, but for running reindex.
+	$config['daemon']['reindex']['times'] = array(array('minute' => '00,15,30,45'));
 
 	//----------------------------------------------------------------------------
 	// Automatic Downloading settings.
@@ -107,6 +114,22 @@
 	$config['tv']['filebase'] = dirname(__FILE__).'/www/sources/';
 	// How long should the sources cache their data?
 	$config['tv']['cachetime'] = 82800; // Cache for 23 hours
+	
+	//----------------------------------------------------------------------------
+	// Misc defines - These shouldn't be changed.
+	//----------------------------------------------------------------------------
+	define('CRLF', "\r\n");
+	define('EOL', '<br>'.CRLF);
+
+	// The type of times available to match in time arrays.
+	// 'timename' => 'format for date()'
+	$config['times'] = array('second' => 's',
+	                         'minute' => 'i',
+	                         'hour' => 'H',
+	                         'day' => 'd',
+	                         'month' => 'm',
+	                         'year' => 'Y'
+	                        );
 	
 	
 	//----------------------------------------------------------------------------

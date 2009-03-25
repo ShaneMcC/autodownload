@@ -71,7 +71,8 @@
 	 * @param $searchTerm Term to search for
 	 * @param $debug (Default = false) Print the page as returned by the search
 	 *               provider before passing it to simplexml_load_string()
-	 * @return simplexml instance representing the search results.
+	 * @return simplexml instance representing the search results, or false if the
+	 *         search page was unable to be opened.
 	 */
 	function searchFor($searchTerm, $debug = false) {
 		global $config;
@@ -83,10 +84,10 @@
 		$url .= '&limit=100';
 		$url .= '&search='.urlencode($searchTerm);
 		
-		$page = @file_get_contents($url);
+		$page = file_get_contents($url);
 		
 		if ($debug) { echo '<pre>'.htmlspecialchars($page).'</pre>'; }
-		return simplexml_load_string($page);
+		return ($page === false) ? false : simplexml_load_string($page);
 	}
 
 	/**
@@ -191,15 +192,18 @@
 	 * @return The index of the best match.
 	 */
 	function GetBestOptimal($matches,$optimal,$allownegative = false,$allownegativeifdouble = false) {
+		// global $config;
+		// $target_optimal = ($config['download']['highdef']) ? $optimal * 2 : $optimal;
+		$target_optimal = $optimal;
 		$result = 0;
 		$dev = -1;
 		for ($i = 0; $i != count($matches); $i++) {
 			$val = (float)str_replace(',', '', (string)$matches[$i]['sizemb']);
-			if ($val == $optimal) {
+			if ($val == $target_optimal) {
 				$result = $i;
 				break;
 			} else {
-				$cdev = $val - $optimal;
+				$cdev = $val - $target_optimal;
 				if ($allownegative) { $cdev = abs($cdev); }
 				if (($cdev < $dev || $dev < 0) && ($cdev > 0)) {
 					$dev = $cdev;
@@ -210,11 +214,11 @@
 		if ($allownegative === false) {
 			if ($dev < 0) {
 				$result = GetBestOptimal($matches,$optimal,true);
-			} else if ($allownegativeifdouble === true && $cdev > ($optimal * 2)) {
+			} else if ($allownegativeifdouble === true && $cdev > ($target_optimal * 2)) {
 				$currentResult = $result;
 				$possibleResult = GetBestOptimal($matches,$optimal,true);
 				
-				$minumum = $optimal * 0.8;
+				$minumum = $target_optimal * 0.8;
 				$val = (float)str_replace(',', '', (string)$matches[$possibleResult]['sizemb']);
 				if ($val >= $minumum) {
 					$result = $possibleResult;
@@ -223,6 +227,36 @@
 		}
 		
 		return $result;
+	}
+	
+	/**
+	 * Called by getShowInfo after the data has been obtained, and before it has
+	 * been returned.
+	 * This function can manipulate the data before the calling function gets to
+	 * see it. This is used to apply common changes.
+	 *
+	 * @param $info Info that will be returned
+	 * @return Output to actually return to the user.
+	 */
+	function getShowInfo_process($info) {
+		global $config;
+		
+		// Apply defaults if nothing special is specified
+		$info['searchstring'] = ($info['searchstring'] == null || empty($info['searchstring'])) ? $config['default']['searchstring'] : $info['searchstring'];
+		$info['dirname'] = ($info['dirname'] == null || empty($info['dirname'])) ? $config['default']['dirname'] : $info['dirname'];
+		$info['attributes'] = ($info['attributes'] == null || empty($info['attributes'])) ? $config['default']['attributes'] : $info['attributes'];
+		
+		// Make sure automatic and important are booleans
+		$info['automatic'] = (strtolower($info['automatic']) == 'true');
+		$info['important'] = (strtolower($info['important']) == 'true');
+		
+		// Double the optimal size if using highdef.
+		if ($config['download']['highdef']) {
+			$info['size_original'] = $info['size'];
+			$info['size'] = $info['size'] * 2;
+		}
+		
+		return $info;
 	}
 
 	// Include the data-storage methods specified by the config file here so that

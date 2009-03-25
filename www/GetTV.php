@@ -49,13 +49,27 @@
 	echo 'Optimal Size: <strong>', $info['size'],'mb</strong>', EOL;
 	echo EOL;
 	
-	$search = searchFor($searchString);
+	echo '<!--';
+	ob_start();
+	$search = searchFor($searchString, true);
+	$buffer = ob_get_contents();
+	ob_end_clean();
+	echo '-->';
 	
-	if ($search->error && $search->error != '') {
+	if (preg_match('@function.file-get-contents</a>]: (.*)  in@U', $buffer, $matches)) {
+		echo 'An error occured loading the search provider: ', $matches[1], EOL;
+	} else if ($search === false) {
+		echo 'An error occured getting the search results: The search provider could not be loaded', EOL;
+	} else  if ($search->error['message'] && $search->error['message'] != '') {
 		echo 'An error occured getting the search results: ', (string)$search->error['message'], EOL;
 	} else {
 		$items = $search->item;
 		$optimal = GetBestOptimal($items, $show['size'], false, true);
+		
+		echo '<pre>';
+		print_r($items);
+		print_r($search);
+		echo '</pre>';
 		
 		$i = 0;
 		foreach ($items as $item) {
@@ -113,10 +127,9 @@
 			echo '<br>'.CRLF;
 		}
 		
-		echo '<pre>';
-		print_r($items);
-		print_r($search);
-		echo '</pre>';
+		if ($i == 0) {
+			echo '<strong>No search results were found.</strong>', EOL;
+		}
 	}
 	
 	foot();

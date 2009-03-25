@@ -9,10 +9,27 @@
 	// Include the config incase it has not yet been included
 	include_once(dirname(__FILE__).'/../config.php');
 	
-	// Try to connect to the mysql database. If we can't, then we should abort.
-	$mysqli = @new mysqli($config['storage']['mysql']['host'], $config['storage']['mysql']['user'], $config['storage']['mysql']['pass'], $config['storage']['mysql']['database'], $config['storage']['mysql']['port']);
-	if (mysqli_connect_errno()) {
-		die('Unable to connect to MySQL Database');
+	// Make $mysqli null so we know that it hasn't been created yet.
+	$mysqli = null;
+	
+	/**
+	 * Try to connect to the MySQL Database.
+	 * If the connection works or a database connection already exists then this
+	 * returns the mysqli instance, else die() is called.
+	 *
+	 * @return $mysqli instance for the database connection.
+	 */
+	function connectSQL() {
+		global $mysqli, $config;
+		
+		if ($mysqli == null) {
+			$mysqli = @new mysqli($config['storage']['mysql']['host'], $config['storage']['mysql']['user'], $config['storage']['mysql']['pass'], $config['storage']['mysql']['database'], $config['storage']['mysql']['port']);
+			if (mysqli_connect_errno()) {
+				die('Unable to connect to MySQL Database');
+			}
+		}
+		
+		return $mysqli;
 	}
 	
 	/**
@@ -22,7 +39,9 @@
 	 * @return Array containing information from the database for the given show.
 	 */
 	function getShowInfo($showname) {
-		global $mysqli, $config;
+		global $config;
+		
+		$mysqli = connectSQL();
 		
 		$result = array();
 		$result['name'] = (string)$showname;
@@ -44,12 +63,7 @@
 			$stmt->free_result();
 		}
 
-		$result['searchstring'] = ($result['searchstring'] == null || empty($result['searchstring'])) ? $config['default']['searchstring'] : $result['searchstring'];
-		$result['dirname'] = ($result['dirname'] == null || empty($result['dirname'])) ? $config['default']['dirname'] : $result['dirname'];
-		$result['attributes'] = ($result['attributes'] == null || empty($result['attributes'])) ? $config['default']['attributes'] : $result['attributes'];
-		$result['automatic'] = (strtolower($result['automatic']) == 'true');
-		$result['important'] = (strtolower($result['important']) == 'true');
-		return $result;
+		return getShowInfo_process($result);
 	}
 	
 	/**
@@ -61,8 +75,7 @@
 	 * @return The time that the episode was downloaded at, or 0.
 	 */
 	function hasDownloaded($showname, $season, $episode) {
-		global $mysqli;
-		
+		$mysqli = connectSQL();
 		$result = 0;
 		
 		if ($stmt = $mysqli->prepare('SELECT time FROM downloaded WHERE name=? and season=? and episode=?')) {
@@ -88,7 +101,7 @@
 	 * @param $title Title of the episode if known.
 	 */
 	function setDownloaded($showname, $season, $episode, $title = '') {
-		global $mysqli;
+		$mysqli = connectSQL();
 		
 		if ($stmt = $mysqli->prepare('INSERT INTO downloaded (name, season, episode, time, title) VALUES (?, ?, ?, ?, ?)')) {
 			$time = time();

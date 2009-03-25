@@ -38,11 +38,7 @@
 		$result['important'] = isset($important[$name]);
 		$result['size'] = (isset($optimalsize[$name])) ? $optimalsize[$name] : '400';
 		
-		$result['searchstring'] = ($result['searchstring'] == null || empty($result['searchstring'])) ? $config['default']['searchstring'] : $result['searchstring'];
-		$result['dirname'] = ($result['dirname'] == null || empty($result['dirname'])) ? $config['default']['dirname'] : $result['dirname'];
-		$result['attributes'] = ($result['attributes'] == null || empty($result['attributes'])) ? $config['default']['attributes'] : $result['attributes'];
-		
-		return $result;
+		return getShowInfo_process($result);
 	}
 	
 	/**

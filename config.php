@@ -6,26 +6,45 @@
 	define('EOL', '<br>'.CRLF);
 
 	//----------------------------------------------------------------------------
+	// Indexing daemon config settings
+	//----------------------------------------------------------------------------
+	// Pid File
+	$config['daemon']['pid'] = dirname(__FILE__).'/daemon.pid';
+	// Should the daemon fork?
+	$config['daemon']['fork'] = false;
+
+	//----------------------------------------------------------------------------
 	// How should we search newzbin?
 	//----------------------------------------------------------------------------
+	// Search provider
 	$config['search']['provider'] = 'http://localhost/new/nzb/';
+	// Username for searching
 	$config['search']['username'] = 'unknown';
+	// Password for searching
 	$config['search']['password'] = 'unknown';
 	
 	//----------------------------------------------------------------------------
-	// How should we store our data?
+	// Data Storage confiuration
 	//----------------------------------------------------------------------------
+	// What storage to use
 	$config['storage']['type'] = 'mysql';
 	
 	// Configuration Settings for mysql
+	// Database host
 	$config['storage']['mysql']['host'] = '127.0.0.1';
+	// Database port
 	$config['storage']['mysql']['port'] = '3306';
+	// Database username
 	$config['storage']['mysql']['user'] = 'autodownload';
+	// Database password
 	$config['storage']['mysql']['pass'] = 'wf345fr5yrt';
+	// Database name
 	$config['storage']['mysql']['database'] = 'autodownload';
 	
 	// Configuration Settings for text-based storage
+	// Where is Show information stored (Equivilent of "shows" table)
 	$config['storage']['text']['settings'] = 'DataDB.php';
+	// Where is downloaded information stored (Equivilent of "downloads" table)
 	$config['storage']['text']['got'] = 'GotDB.php';
 	
 	//----------------------------------------------------------------------------

@@ -73,7 +73,6 @@
 	}
 	
 	echo "<pre>";
-	$log = '/tmp/hella_'.time().'.log';
 	$querynumber = 0;
 	for ($a = 0; $a != count($posts); $a++) {
 		$post = $posts[$a];
@@ -103,17 +102,11 @@
 		flush();
 		$querynumber++;
 
-		$cmd = $config['hellanzb']['python'].' '.$config['hellanzb']['location'].' -c '.$config['hellanzb']['config'].' -l '.$log.' enqueuenewzbin '.$post;
-		echo 'Exec: '.$cmd."\r\n";
-		flush();
-		
-		if (isset($output)) { unset($output); }
-		exec($cmd, $output);
-		flush();
-		print_r($output);
+		echo 'Asking hellahella to download: ', $post, CRLF;
+		$result = downloadNZB($post);
+		print_r($result['output']);
 	}
 	
-	if (file_exists($log)) { unlink($log); }
 	echo "</pre>";
 	
 	foot();

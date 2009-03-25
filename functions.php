@@ -171,7 +171,34 @@
 		
 		return $shows;
 	}
-
+	
+	/**
+	 * Get the search string for the given show.
+	 *
+	 * @param $show Show array to get searchstring for.
+	 * @param $info (Defaults = empty array) $info array to use. If empty, 
+	 *              $show['info'] will be used, else getShowInfo() will be called
+	 * @return Final Search String for $show after replacements and attributes.
+	 */
+	function getSearchString($show, $info = array()) {
+		if ($info == null || empty($info)) {
+			$info = ($show['info'] == null || empty($show['info'])) ? getShowInfo($show['name']) : $show['info'];
+		}
+		
+		$bit_search = array("{series}", "{season}", "{episode}", "{title}", "{time}");
+		$bit_replace = array($show['name'], $show['season'], sprintf('%02d', $show['episode']), $show['title'], $show['time']);
+		
+		$searchString = $info['searchstring'];
+		$searchString = str_replace($bit_search, $bit_replace, $searchString);
+		
+		if (trim($info['attributes']) != '') {
+			$searchString .= ' ';
+			$searchString .= $info['attributes'];
+		}
+		
+		return $searchString;
+	}
+	
 	/**
 	 * Get the index for the optimal download from the given list.
 	 *
@@ -262,5 +289,75 @@
 	// Include the data-storage methods specified by the config file here so that
 	// they can be used without anything else needing to know where the data is
 	// actually being retrieved from.
-	include_once(dirname(__FILE__).'/storage/'.$config['storage']['type'].'.php');
+	// Defaults to dummy methods if the file doesn't exist.
+	$storage_file = dirname(__FILE__).'/storage/'.$config['storage']['type'].'.php';
+	if (file_exists($storage_file)) {
+		include_once($storage_file);
+	} else {
+		/**
+		 * Get information about the given show.
+		 *
+		 * @param $showname Show to get information for
+		 * @return Array containing information from the database for the given show.
+		 */
+		function getShowInfo($showname) {
+			$name = (string)$showname;
+			
+			$result = array();
+			$result['name'] = $name;
+			$result['automatic'] = false;
+			$result['searchstring'] = '';
+			$result['dirname'] = '' ;
+			$result['attributes'] = '' ;
+			$result['important'] = false;
+			$result['size'] = '400';
+			
+			return getShowInfo_process($result);
+		}
+		
+		/**
+		 * Check if the given episode of a show has been downloaded.
+		 *
+		 * @param $showname Show name to check
+		 * @param $season Season to check
+		 * @param $episode Episode to check
+		 * @return The time that the episode was downloaded at, or 0.
+		 */
+		function hasDownloaded($showname, $season, $episode) {
+			return false;
+		}
+		
+		/**
+		 * Set a given episode of a show as already-downloaded.
+		 *
+		 * @param $showname Show name to set
+		 * @param $season Season to set
+		 * @param $episode Episode to set
+		 * @param $title Title of the episode if known.
+		 */
+		function setDownloaded($showname, $season, $episode, $title = '') {
+			return;
+		}
+	}
+	
+	// Include the downloader methods specified by the config file here so that
+	// they can be used without anything else needing to know what is actually
+	// doing the downloading.
+	// Defaults to dummy methods if the file doesn't exist.
+	$downloader_file = dirname(__FILE__).'/downloader/'.$config['downloader']['type'].'.php';
+	if (file_exists($downloader_file)) {
+		include_once($downloader_file);
+	} else {
+		/**
+		 * Download the given NZB.
+		 *
+		 * @param $nzbid
+		 * @return Array containing the output from the downloader, and the status code.
+		 */
+		function downloadNZB($nzbid) {
+			$result['output'] = array();
+			$result['status'] = true;
+			return $result;
+		}
+	}
 ?>

@@ -14,6 +14,12 @@
 	$config['daemon']['fork'] = false;
 
 	//----------------------------------------------------------------------------
+	// Automatic Downloading settings.
+	//----------------------------------------------------------------------------
+	// Source to use for automatic downloads. ('' for default);
+	$config['autodownload']['source'] = 'pogdesign';
+
+	//----------------------------------------------------------------------------
 	// How should we search newzbin?
 	//----------------------------------------------------------------------------
 	// Search provider
@@ -68,12 +74,18 @@
 	//----------------------------------------------------------------------------
 	// Hellanzb details
 	//----------------------------------------------------------------------------
+	$config['downloader']['type'] = 'hellanzb_shell';
+	
+	// Configuration Settings for hellanzb
+	$config['downloader']['hellanzb']['config'] = '/usr/etc/hellanzb.conf';
+	
+	// Configuration Settings for hellanzb_shell
 	// Location of python
-	$config['hellanzb']['python'] = '/usr/bin/python';
+	$config['downloader']['hellanzb_shell']['python'] = '/usr/bin/python';
 	// Location of hellanzb
-	$config['hellanzb']['location'] = '/usr/bin/hellanzb.py';
+	$config['downloader']['hellanzb_shell']['location'] = '/usr/bin/hellanzb.py';
 	// Location of hellanzb config (libnotify must be disabled)
-	$config['hellanzb']['config'] = '/usr/etc/hellanzb.conf.web';
+	$config['downloader']['hellanzb_shell']['config'] = '/usr/etc/hellanzb.conf.web';
 	
 	//----------------------------------------------------------------------------
 	// Multi-Download sleep times.

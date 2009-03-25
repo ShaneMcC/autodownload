@@ -17,7 +17,7 @@
 	$cat_page = 'http://'.$cat_host.'/';
 	
 	if (isset($_REQUEST['extra'])) {
-		$cat_host = $_REQUEST['extra'].'on-my.tv';
+		$cat_host = $_REQUEST['extra'].'.on-my.tv';
 		$cat_page = 'http://'.$cat_host.'/';
 	}
 	
@@ -98,8 +98,8 @@
 		
 			echo "\t<show>\n";
 			echo "\t\t<date time=\"".$time."\">".$matches[1]."</date>\n";
-			echo "\t\t<name>".htmlentities(html_entity_decode($matches[2]))."</name>\n";
-			echo "\t\t<title>".htmlentities(html_entity_decode($matches[3]))."</title>\n";
+			echo "\t\t<name>".htmlspecialchars(html_entity_decode($matches[2]), ENT_QUOTES, 'UTF-8')."</name>\n";
+			echo "\t\t<title>".htmlspecialchars(html_entity_decode($matches[3]), ENT_QUOTES, 'UTF-8')."</title>\n";
 			echo "\t\t<season>".$matches[4]."</season>\n";
 			echo "\t\t<episode>".$matches[5]."</episode>\n";
 			echo "\t</show>\n";

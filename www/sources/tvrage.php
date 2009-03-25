@@ -40,8 +40,8 @@
 			
 				echo "\t<show>\n";
 				echo "\t\t<date time=\"".$time."\">".$date."</date>\n";
-				echo "\t\t<name>".htmlentities($matches[1])."</name>\n";
-				echo "\t\t<title>".htmlentities($description)."</title>\n";
+				echo "\t\t<name>".htmlspecialchars($matches[1], ENT_QUOTES, 'UTF-8')."</name>\n";
+				echo "\t\t<title>".htmlspecialchars($description, ENT_QUOTES, 'UTF-8')."</title>\n";
 				echo "\t\t<season>".$matches[2]."</season>\n";
 				echo "\t\t<episode>".$matches[3]."</episode>\n";
 				echo "\t</show>\n";

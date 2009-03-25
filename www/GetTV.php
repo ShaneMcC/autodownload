@@ -36,14 +36,7 @@
 	
 	$info = (is_array($show['info'])) ? $show['info'] : getShowInfo($show['name']);
 	
-	$bit_search = array("{series}", "{season}", "{episode}", "{title}", "{time}");
-	$bit_replace = array($show['name'], $show['season'], $show['episode'], $show['title'], $show['time']);
-	
-	$searchString = $info['searchstring'];
-	$searchString = str_replace($bit_search, $bit_replace, $searchString);
-	
-	$searchString .= ' ';
-	$searchString .= $info['attributes'];
+	$searchString = getSearchString($show, $info);
 	
 	echo 'Searching for: <strong>', $searchString,'</strong>', EOL;
 	echo 'Optimal Size: <strong>', $info['size'],'mb</strong>', EOL;

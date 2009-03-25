@@ -4,10 +4,12 @@
 	include_once(dirname(__FILE__).'/functions.php');
 	include_once(dirname(__FILE__).'/daemon.tools.php');
 
-	addCLIParam('f', 'foreground', 'Don\'t fork');
-	addCLIParam('b', 'background', 'Fork');
-	addCLIParam('r', 'reindex', 'Force a manual reindex, then exit');
-	addCLIParam('a', 'autotv', 'Run a manual AutoTV check, then exit');
+	addCLIParam('f', 'foreground', 'Don\'t fork.');
+	addCLIParam('b', 'background', 'Do Fork. (Takes priority over --foreground)');
+	addCLIParam('r', 'reindex', 'Force a manual reindex, don\'t start daemon.');
+	addCLIParam('a', 'autotv', 'Run a manual AutoTV check, don\'t start daemon.');
+	addCLIParam('', 'noreindex', 'Don\'t periodically reindex.');
+	addCLIParam('', 'noautotv', 'Don\'t periodically run AutoTV checks.');
 	addCLIParam('', 'pid', 'Specify an alternative PID file.', true);
 	
 	$cli = parseCLIParams($_SERVER['argv']);
@@ -19,7 +21,16 @@
 	}
 	
 	// Start the daemon so that it loops every 5 seconds.
-	//startDaemon($config['daemon']['pid'], $config['daemon']['fork'], doDaemonLoop, (5 * 1000), __FILE__);
+	$fork = $config['daemon']['fork'];
+	if (isset($cli['foreground'])) { $fork = false; }
+	if (isset($cli['background'])) { $fork = true; }
+	$pid = (isset($cli['pid'])) ? $cli['pid']['values'][count($cli['pid']['values'])-1] : $config['daemon']['pid'];
+	$daemonise = true;
+	if (isset($cli['reindex'])) { $daemonise = false; handleReindex(); }
+	if (isset($cli['autotv'])) { $daemonise = false; handleCheckAuto(); }
+	if ($daemonise) {
+		startDaemon($pid, $fork, doDaemonLoop, (5 * 1000), __FILE__);
+	}
 	
 	/**
 	 * Handle the Daemon Loop
@@ -67,10 +78,51 @@
 	/**
 	 * Handle moving files from the download directory to the sorted directory
 	 */
-	function handleReindex() { }
+	function handleReindex() {
+		global $config;
+	}
 	
 	/**
 	 * Handle checking for automatic downloads
 	 */
-	function handleCheckAuto() { }
+	function handleCheckAuto() {
+		global $config;
+		
+		// Posts we need to download.
+		$posts = array();
+		
+		foreach (getShows(true, -1, -1, false, $config['autodownload']['source']) as $show) {
+			$info = $show['info'];
+			// Check if this show is marked as automatic, (and is marked as important if onlyimportant is set true)
+			// Also check that the show hasn't already been downloaded.
+			$important = (($info['important'] && $config['download']['onlyimportant']) || !$config['download']['onlyimportant']);
+			if ($info['automatic'] && $important && !hasDownloaded($show['name'], $show['season'], $show['episode'])) {
+				// Search for this show, and get the optimal match.
+				ob_start();
+				$search = searchFor(getSearchString($show), false);
+				$buffer = ob_get_contents();
+				ob_end_clean();
+				
+				if (preg_match('@function.file-get-contents</a>]: (.*)  in@U', $buffer, $matches)) {
+					// echo 'An error occured loading the search provider: ', $matches[1], EOL;
+				} else if ($search === false) {
+					// echo 'An error occured getting the search results: The search provider could not be loaded', EOL;
+				} else  if ($search->error['message'] && $search->error['message'] != '') {
+					// echo 'An error occured getting the search results: ', (string)$search->error['message'], EOL;
+				} else {
+					$items = $search->item;
+					$optimal = GetBestOptimal($items, $show['size'], false, true);
+					if ($optimal != -1) {
+						$best = $items[$optimal];
+						// Try to download.
+						$result = downloadNZB((int)$best->nzbid);
+						if ($result['status']) {
+							// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
+							setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
+						}
+					}
+				}
+			}
+		}
+	}
 ?>

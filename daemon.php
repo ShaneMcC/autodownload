@@ -47,12 +47,33 @@
 				break;
 			// Currently unhandled callbacks
 			case DAEMONTOOLS_SIGNAL:
+				handleSignal($args['signal']);
+				break;
 			case DAEMONTOOLS_STARTED:
 			case DAEMONTOOLS_STOPPED:
 			case DAEMONTOOLS_EXITING:
 			default:
 				break;
 		}
+	}
+	
+	/**
+	 * Handler for signals sent to the daemon.
+	 *
+	 * @param $signal Signal that was sent.
+	 * @return returns true if signal was handled.
+	 */
+	function handleSignal($signal) {
+		global $config;
+		switch ($signal) {
+			case SIGHUP:
+				include(dirname(__FILE__).'/config.php');
+				return true;
+			default:
+				break;
+		}
+		
+		return false;
 	}
 	
 	/**
@@ -296,7 +317,7 @@
 							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
 							
 							doEcho($source, ' => ', $dest, CRLF);
-							// rename($source, $dest);
+							rename($source, $dest);
 						}
 					}
 					
@@ -379,7 +400,7 @@
 							// be deleted.
 							// If multiple files in this directory get moved, then the
 							// status of the last one will be used.
-							$deleteDir = false; //rename($source, $dest);
+							$deleteDir = rename($source, $dest);
 						}
 					}
 				}

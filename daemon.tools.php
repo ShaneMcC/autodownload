@@ -177,6 +177,7 @@
 					@call_user_func($__daemontools['function'], DAEMONTOOLS_FORK_SUCCESS, array('parent' => true, 'pid' => $pid));
 					return $pid;
 				} else {
+					$__daemontools['forked'] = true;
 					@call_user_func($__daemontools['function'], DAEMONTOOLS_FORK_SUCCESS, array('parent' => false, 'pid' => getmypid()));
 				}
 			}
@@ -185,8 +186,9 @@
 			file_put_contents($__daemontools['pid'], getmypid());
 		}
 		
-		// Add handler for the SIGTERM signal
+		// Add handler for the SIGTERM and SIGHUP signals
 		pcntl_signal(SIGTERM, "daemontools_handleSignal");
+		pcntl_signal(SIGHUP, "daemontools_handleSignal");
 	
 		// If pcntl_signal_dispatch() does not exist, then Set ticks to 1 to allow
 		// the signal handler to work.
@@ -285,9 +287,12 @@
 		
 		@call_user_func($__daemontools['function'], DAEMONTOOLS_SIGNAL, array('signal' => $signal));
 		
-		if ($signal == SIGTERM) {
-			$__daemontools['loop'] = false;
-			return true;
+		switch ($signal) {
+			case SIGTERM:
+				$__daemontools['loop'] = false;
+				return true;
+			default:
+				break;
 		}
 		
 		return false;

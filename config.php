@@ -24,7 +24,7 @@
 	// the default (first) will be used.
 	// $config['daemon']['reindex']['dirs'] = array('Misc', 'Watching', 'Unwatched', 'Watched');
 	// $config['daemon']['reindex']['dirs'] = array('Unwatched', 'Watched');
-	$config['daemon']['reindex']['dirs'] = array('Crap', 'Watched');
+	$config['daemon']['reindex']['dirs'] = array('Unwatched', 'Watched');
 	// Base directory to reindex into
 	$config['daemon']['reindex']['basedir'] = '/media/data/TV/';
 	// Base directory to reindex from

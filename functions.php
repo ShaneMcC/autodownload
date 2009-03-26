@@ -200,6 +200,64 @@
 	}
 	
 	/**
+	 * Extract Episode info from the given name, using any of the given patterns.
+	 *
+	 * @param $patterns Patterns to check for matches
+	 * @param $name Name to compare patterns to
+	 * @return Array containing show name, season, episode and title, or null.
+	 */
+	function getEpisodeInfo($patterns, $name) {
+		foreach ($patterns as $pattern => $info) {
+			doEcho('Trying: ', $pattern, CRLF);
+			if (preg_match($pattern, $name, $matches)) {
+				doPrintR($matches);
+				$result['pattern'] = $pattern;
+				$result['name'] = isset($info['name']) ? $matches[$info['name']] : 'Unknown';
+				$result['season'] = isset($info['season']) ? $matches[$info['season']] : '00';
+				$result['episode'] = isset($info['episode']) ? $matches[$info['episode']] : '00';
+				$result['title'] = isset($info['title']) ? $matches[$info['title']] : 'Episode '.$result['season'].'x'.$result['episode'];
+				
+				$result['name'] = cleanName($result['name']);
+					
+				return $result;
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Clean up the given episode name.
+	 *   - Removes . or _ between words
+	 *   - Removes non alphanumeric or () ' : symbols from name
+	 *   - Replaces multiple spaces in a row with a single space
+	 *   - Make the first letter of everyword uppercase
+	 *   - Get the real case of the name from the database
+	 *
+	 * @param $name Name to clean up
+	 * @return Cleaned up name.
+	 */
+	function cleanName($name) {
+		// replace any .s or _s that were used in place of spaces, with spaces.
+		$name = preg_replace('@([a-zA-Z0-9])\.([a-zA-Z0-9])@', '\1 \2', $name);
+		
+		// Replace any non alphanumerics or some special characters with spaces.
+		$name = preg_replace('@[^a-zA-Z0-9\(\):\']@', ' ', $name);
+		
+		// Replace multiple spaces in a row with a single space.
+		$name = preg_replace('@[\s]+@', ' ', $name);
+		
+		// Make words have uppercase first letters
+		$name = ucfirst($name);
+		
+		// Check with the database for the real case of the name.
+		$showinfo = getShowInfo($name);
+		$name = $showinfo['name'];
+				
+		return $name;
+	}
+	
+	/**
 	 * Check if a time array is a time in the time array given.
 	 *
 	 * @param $check Time array to check

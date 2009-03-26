@@ -173,44 +173,6 @@
 	}
 	
 	/**
-	 * Extract Episode info from the given name, using any of the given patterns.
-	 *
-	 * @param $patterns Patterns to check for matches
-	 * @param $name Name to compare patterns to
-	 * @return Array containing show name, season, episode and title, or null.
-	 */
-	function getEpisodeInfo($patterns, $name) {
-		foreach ($patterns as $pattern => $info) {
-			doEcho('Trying: ', $pattern, CRLF);
-			if (preg_match($pattern, $name, $matches)) {
-				doPrintR($matches);
-				$result['pattern'] = $pattern;
-				$result['name'] = isset($info['name']) ? $matches[$info['name']] : 'Unknown';
-				$result['season'] = isset($info['season']) ? $matches[$info['season']] : '00';
-				$result['episode'] = isset($info['episode']) ? $matches[$info['episode']] : '00';
-				$result['title'] = isset($info['title']) ? $matches[$info['title']] : 'Episode '.$result['season'].'x'.$result['episode'];
-				
-				// Clean up the name.
-				// replace any .'s that were used in place of spaces, with
-				// actual spaces.
-				$result['name'] = preg_replace('@([a-zA-Z0-9])\.([a-zA-Z0-9])@', '\1 \2', $result['name']);
-				// Make words have uppercase first letters
-				$result['name'] = ucfirst($result['name']);
-				
-				// Where is the file being moved to?
-				$showinfo = getShowInfo($result['name']);
-				// Replace name with the name from showinfo to make sure all
-				// copies of the show use the same case for the name.
-				$result['name'] = $showinfo['name'];
-				
-				return $result;
-			}
-		}
-		
-		return null;
-	}
-	
-	/**
 	 * Take the given destination name, and make sure its not currently in use.
 	 * If it is, keep trying to find a valid one by adding (1) (2) (3) etc untill
 	 * a name that isn't taken is found.
@@ -317,11 +279,23 @@
 							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
 							
 							doEcho($source, ' => ', $dest, CRLF);
-							rename($source, $dest);
+							
+							// Make sure the target directory exists
+							if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
+							if (!rename($source, $dest)) {
+								// Rename failed.
+								// If the file still exists (its possible for a file to get lost
+								// in a failed rename) then readd the watch.
+								
+								addINotifyWatch($item['file']);
+							}
 						}
 					}
 					
-					$item['access_count'] = 0;
+					// If the watch wasn't removed, then reset the access count.
+					if (isset($daemon['inotify']['files'][$event['wd']])) {
+						$item['access_count'] = 0;
+					}
 				}
 			}
 		}

@@ -56,7 +56,10 @@
 	$config['daemon']['reindex']['usedirnames'] = false;
 	// If inotify is watching a file, how many IN_ACCESS events need to be
 	// generated to consider a file as watched?
-	$config['daemon']['reindex']['inotify_count'] = 1;
+	// This should be at least 10 really, which requires 50 seconds of watching
+	// before a file is considered moveable. Adjust as needed. value * 5 = seconds
+	// required before allowing to be reindexed.
+	$config['daemon']['reindex']['inotify_count'] = 10;
 
 	//----------------------------------------------------------------------------
 	// Automatic Downloading settings.

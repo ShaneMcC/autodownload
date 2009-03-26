@@ -203,15 +203,15 @@
 	 * Check if a time array is a time in the time array given.
 	 *
 	 * @param $check Time array to check
-	 * @param $this (Default = array()) Time to check. If empty or null, "now" is
+	 * @param $thisTime (Default = array()) Time to check. If empty or null, "now" is
 	 *              assumed. If a time array is incomplete, values from "now" will
 	 *              be used to complete it.
 	 * @return True if the time array and check match.
 	 */
-	function checkTimeArray($check, $this = array()) {
+	function checkTimeArray($check, $thisTime = array()) {
 		global $config;
 		
-		if ($this == null) { $this = array(); }
+		if ($thisTime == null) { $thisTime = array(); }
 		
 		// Loop through every time array in the check array
 		foreach ($check as $time) {
@@ -223,8 +223,8 @@
 					// If it does, check that the value of the current time is in the
 					// array.
 					$array = is_array($time[$timename]) ? $time[$timename] : preg_split('@[^0-9]+@', $time[$timename]);
-					if (!isset($this[$timename])) { $this[$timename] = date($format); }
-					if (!in_array($this[$timename], $array)) {
+					if (!isset($thisTime[$timename])) { $thisTime[$timename] = date($format); }
+					if (!in_array($thisTime[$timename], $array)) {
 						// Not in the array, set the result to false, and break this loop,
 						// no point checking any further.
 						$result = false;
@@ -239,6 +239,72 @@
 		}
 		
 		// If we get here, then none of the time arrays matched, so return false.
+		return false;
+	}
+	
+	/**
+	 * Get a listing of a directory as an array.
+	 * Based on http://snippets.dzone.com/posts/show/155
+	 *
+	 * @param $directory Directory to list
+	 * @param $recursive (Default = true) Should subdirectories be recursed into?
+	 * @param $fullpath (Default = true) Should full path be stored for each entry
+	 *                  or just relative to the above entry?
+	 * @param $includedirectories (Default = true) If recursive is false, should
+	 *                            directories be included in the list?
+	 */
+	function directoryToArray($directory, $recursive = true, $fullpath = true, $includedirectories = true) {
+		$array_items = array();
+		if ($handle = opendir($directory)) {
+			while (false !== ($file = readdir($handle))) {
+				if ($file != '.' && $file != '..') {
+					$nicefile = (($fullpath) ? $directory.'/' : '') . $file;
+					$nicefile = preg_replace('@//@si', '/', $nicefile);
+					$fullfile = $directory.'/'.$file;
+					$array_item = array();
+					
+					if (is_dir($fullfile)) {
+						if ($includedirectories || $recursive) {
+							$array_item['name'] = $nicefile;
+							$array_item['contents'] = ($recursive) ? directoryToArray($fullfile, $recursive) : array();
+							$array_items[] = $array_item;
+						}
+					} else {
+						$array_item['name'] = $nicefile;
+						
+						$array_items[] = $array_item;
+					}
+				}
+			}
+			closedir($handle);
+		}
+		return $array_items;
+	}
+	
+	/**
+	 * Recursively remove all the files/directories in the given directory and
+	 * then remove the given directory itself.
+	 *
+	 * @param $dir Directory to remove.
+	 * @return True if the directory was removed, else false.
+	 */
+	function rmdirr($dir) {
+		if (substr($dir,-1) != '/') $dir .= '/';
+		if (!is_dir($dir)) return false;
+	
+		if (($dh = opendir($dir)) !== false) {
+			while (($entry = readdir($dh)) !== false) {
+				if ($entry != '.' && $entry != '..') {
+					if (is_file($dir . $entry) || is_link($dir . $entry)) {
+						unlink($dir . $entry);
+					} else if (is_dir($dir . $entry)) rmdirr($dir . $entry);
+				}
+			}
+			closedir($dh);
+			rmdir($dir);
+		
+			return true;
+		}
 		return false;
 	}
 	

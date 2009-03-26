@@ -17,7 +17,7 @@
 		global $config;
 		
 		$log = '/tmp/hella_'.time().'.log';
-		$cmd = $config['hellanzb']['python'].' '.$config['hellanzb']['location'].' -c '.$config['hellanzb']['config'].' -l '.$log.' enqueuenewzbin '.$nzbid;
+		$cmd = $config['downloader']['hellanzb_shell']['python'].' '.$config['downloader']['hellanzb_shell']['location'].' -c '.$config['downloader']['hellanzb_shell']['config'].' -l '.$log.' enqueuenewzbin '.$nzbid;
 		
 		exec($cmd, $output, $return);
 		if (file_exists($log)) { unlink($log); }

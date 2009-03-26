@@ -98,16 +98,31 @@
 	/**
 	 * Echo function that only echos when not forked.
 	 *
-	 * @param $text Text to echo.
+	 * @param $text Text to echo. (Multiple parameters can be passed, which will
+	 *              all be passed to echo);
 	 */
 	function doEcho($text) {
 		global $__daemontools;
 		
 		if (!$__daemontools['forked']) {
-			echo $text;
+			foreach (func_get_args() as $arg) {
+				echo $arg;
+			}
 		}
 	}
 	
+	/**
+	 * print_r function that only works when not forked.
+	 *
+	 * @param $text Text to print.
+	 */
+	function doPrintR($text) {
+		global $__daemontools;
+		
+		if (!$__daemontools['forked']) {
+			print_r($text);
+		}
+	}
 	
 	/**
 	 * Handle daemonising of the current script.

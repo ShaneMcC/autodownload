@@ -60,47 +60,249 @@
 	 */
 	function handleLoop() {
 		global $config, $daemon;
-		echo 'Loop', CRLF;
 
+		// Check to see what time has changed
 		foreach ($config['times'] as $time => $format) {
 			// Get the time from the previous loop
-			$last[$time] = (isset($daemon['time'][$time])) ? $daemon['time'][$time] : 0;
+			$lastTime[$time] = (isset($daemon['time'][$time])) ? $daemon['time'][$time] : 0;
 			// Get the current time.
-			$this[$time] = date($format);
+			$thisTime[$time] = date($format);
 			
 			// Store if the time changed
-			$changed[$time] = ($this[$time] != $last[$time]);
+			$changed[$time] = ($thisTime[$time] != $lastTime[$time]);
 			// Store the time for the next loop
-			$daemon['time'][$time] = $this[$time];
+			$daemon['time'][$time] = $thisTime[$time];
 		}
 		
+		// Call appropriate functions
 		foreach ($config['times'] as $time => $format) {
 			if ($changed[$time] && function_exists('handle'.ucfirst($time).'Changed')) {
-				@call_user_func('handle'.ucfirst($time).'Changed', $last, $this);
+				@call_user_func('handle'.ucfirst($time).'Changed', $lastTime, $thisTime);
 			}
 		}
 		
-		echo 'End Loop', CRLF;
+		// Now, check if we are supposed to be doing inotify-y things.
+		if (!$config['daemon']['reindex']['usedirnames'] && function_exists('inotify_init')) {
+			handleINotify();
+		}
+		
+		
+		// Remember that we have run the loop before.
+		$daemon['looped'] = true;
 	}
 	
 	/**
 	 * Handle the Minute changing.
 	 *
-	 * @param $last The last time the loop ran.
-	 * @param $this The time now.
+	 * @param $lastTime The last time the loop ran.
+	 * @param $thisTime The time now.
 	 */
-	function handleMinuteChanged($last, $this) {
+	function handleMinuteChanged($lastTime, $thisTime) {
 		global $config, $daemon;
 		
 		// Check if its time to run autotv
-		if (!isset($daemon['cli']['noautotv']) && checkTimeArray($config['daemon']['autotv']['times'], $this)) {
+		if (!isset($daemon['cli']['noautotv']) && checkTimeArray($config['daemon']['autotv']['times'], $thisTime)) {
 			handleCheckAuto();
 		}
 		
 		// Check if its time to run reindex
-		if (!isset($daemon['cli']['noreindex']) && checkTimeArray($config['daemon']['reindex']['times'], $this)) {
-			echo 'Reindex time!';
+		if (!isset($daemon['cli']['noreindex']) && checkTimeArray($config['daemon']['reindex']['times'], $thisTime)) {
 			handleReindex();
+		}
+	}
+	
+	/**
+	 * Add an INotify watch for the given file.
+	 *
+	 * @param $file File to watch.
+	 */
+	function addINotifyWatch($file) {
+		global $config, $daemon;
+		
+		$basedir = $config['daemon']['reindex']['basedir'];
+		$watchdir = preg_replace('@//@si', '/', $basedir.'/'.$config['daemon']['reindex']['dirs'][0]);
+		
+		$item['file'] = $file;
+		$item['access_count'] = 0;
+		$id = inotify_add_watch($daemon['inotify']['fd'], $watchdir.'/'.$file, IN_ACCESS | IN_CLOSE_NOWRITE);
+		// Store this watch so we can perform associated actions later
+		$daemon['inotify']['files'][$id] = $item;
+		// Store a reverse mapping of filenames -> ids so we can get the id
+		// from a filename.
+		$daemon['inotify']['file_names'][$file] = $id;
+		
+		doEcho("\t", 'Added watch for: ', $file, CRLF);
+	}
+	
+	/**
+	 * Delete an INotify watch for the given file.
+	 *
+	 * @param $file File to watch.
+	 */
+	function delINotifyWatch($file) {
+		global $config, $daemon;
+		
+		$id = $daemon['inotify']['file_names'][$file];
+		
+		unset($daemon['inotify']['file_names'][$file]);
+		unset($daemon['inotify']['files'][$id]);
+		
+		inotify_rm_watch($daemon['inotify']['fd'], $id);
+		doEcho("\t", 'Removed watch for: ', $file, CRLF);
+	}
+	
+	/**
+	 * Extract Episode info from the given name, using any of the given patterns.
+	 *
+	 * @param $patterns Patterns to check for matches
+	 * @param $name Name to compare patterns to
+	 * @return Array containing show name, season, episode and title, or null.
+	 */
+	function getEpisodeInfo($patterns, $name) {
+		foreach ($patterns as $pattern => $info) {
+			doEcho('Trying: ', $pattern, CRLF);
+			if (preg_match($pattern, $name, $matches)) {
+				doPrintR($matches);
+				$result['pattern'] = $pattern;
+				$result['name'] = isset($info['name']) ? $matches[$info['name']] : 'Unknown';
+				$result['season'] = isset($info['season']) ? $matches[$info['season']] : '00';
+				$result['episode'] = isset($info['episode']) ? $matches[$info['episode']] : '00';
+				$result['title'] = isset($info['title']) ? $matches[$info['title']] : 'Episode '.$result['season'].'x'.$result['episode'];
+				
+				// Clean up the name.
+				// replace any .'s that were used in place of spaces, with
+				// actual spaces.
+				$result['name'] = preg_replace('@([a-zA-Z0-9])\.([a-zA-Z0-9])@', '\1 \2', $result['name']);
+				// Make words have uppercase first letters
+				$result['name'] = ucfirst($result['name']);
+				
+				// Where is the file being moved to?
+				$showinfo = getShowInfo($result['name']);
+				// Replace name with the name from showinfo to make sure all
+				// copies of the show use the same case for the name.
+				$result['name'] = $showinfo['name'];
+				
+				return $result;
+			}
+		}
+		
+		return null;
+	}
+	
+	/**
+	 * Take the given destination name, and make sure its not currently in use.
+	 * If it is, keep trying to find a valid one by adding (1) (2) (3) etc untill
+	 * a name that isn't taken is found.
+	 *
+	 * @param $dest File name to work from.
+	 * @return Filename based on $dest that isn't already in use.
+	 */
+	function getDestFile($dest) {
+		$filename = explode('.', $dest);
+		$fileext = strtolower(array_pop($filename));
+		
+		$tempname = $dest;
+		$i = 0;
+		while (file_exists($tempname)) {
+			$newtempname = preg_replace('@\.'.$fileext.'$@', ' ('.$i++.').'.$fileext, $dest);
+			doEcho("\t\t\t", 'File "'.$tempname.'" already exists, trying: "'.$newtempname.'"', CRLF);
+			$tempname = $newtempname;
+		}
+		return $tempname;
+	}
+	
+	/**
+	 * Handle INotify events.
+	 */
+	function handleINotify() {
+		global $config, $daemon;
+		
+		$basedir = $config['daemon']['reindex']['basedir'];
+		$watchdir = preg_replace('@//@si', '/', $basedir.'/'.$config['daemon']['reindex']['dirs'][0]);
+		$watcheddir = preg_replace('@//@si', '/', $basedir.'/'.$config['daemon']['reindex']['dirs'][1]);
+		if (!isset($daemon['looped'])) {
+			doEcho('Watching: ', $watchdir, CRLF);
+			doEcho(' Watched: ', $watcheddir, CRLF);
+			
+			// We havn't looped before, so start the inotify stuff
+			$daemon['inotify']['fd'] = inotify_init();
+			$daemon['inotify']['root'] = inotify_add_watch($daemon['inotify']['fd'], $watchdir, IN_CREATE | IN_MOVED_FROM | IN_MOVED_TO | IN_DELETE);
+			$files = directoryToArray($watchdir, false, false, false);
+			foreach ($files as $file) {
+				addINotifyWatch($file['name']);
+			}
+			stream_set_blocking($daemon['inotify']['fd'], 0);
+		}
+		
+		while (($events = inotify_read($daemon['inotify']['fd'])) !== false) {
+			foreach ($events as $event) {
+				// print_r($event);
+			
+				// $item = isset($daemon['inotify']['files'][$event['wd']]) ? $daemon['inotify']['files'][$event['wd']] : array() ;
+				if (isset($daemon['inotify']['files'][$event['wd']])) {
+					$item = &$daemon['inotify']['files'][$event['wd']];
+				} else { $item = array(); }
+				
+				// Have we gained a file from being created or moved in?
+				if ((($event['mask'] & IN_CREATE) > 0 || ($event['mask'] & IN_MOVED_TO) > 0) && ($event['mask'] & IN_ISDIR) == 0) {
+					// Add watch for new file
+					doEcho('Discovered new file: ', $event['name'], CRLF);
+					
+					addINotifyWatch($event['name']);
+				}
+				
+				// Have we lost a file from being deleted or moved away?
+				if ((($event['mask'] & IN_DELETE) > 0 || ($event['mask'] & IN_MOVED_FROM) > 0) && ($event['mask'] & IN_ISDIR) == 0) {
+					doEcho('Lost file: ', $event['name'], CRLF);
+					
+					delINotifyWatch($event['name']);
+				}
+				
+				// Has a watched file been accessed
+				if ($event['mask'] == IN_ACCESS && isset($item['access_count'])) {
+					// Record how many IN_ACCESS events we get for a file.
+					$item['access_count']++;
+					doEcho($item['file'], ' has been accessed.', CRLF);
+				}
+				
+				// Has a watched file been closed?
+				if ($event['mask'] == IN_CLOSE_NOWRITE && isset($item['access_count'])) {
+					// File was closed, check if it was accessed enough to warrant being
+					// considered as watched.
+					doEcho($item['file'], ' has been accessed ', $item['access_count'], ' times.', CRLF);
+					if ($item['access_count'] > $config['daemon']['reindex']['inotify_count']) {
+						doEcho($item['file'], ' is being marked as watched.', CRLF);
+						
+						// Unwatch this file
+						delINotifyWatch($item['file']);
+						
+						// Get the source and of this file.
+						$source = preg_replace('@//@si', '/', $watchdir.'/'.$item['file']);
+						
+						// Check if it matches any of the patterns.
+						$patterns = $config['daemon']['reindex']['filepatterns'];
+						
+						$info = getEpisodeInfo($config['daemon']['reindex']['filepatterns'], $item['file']);
+						if ($info != null) {
+							$filename = explode('.', $item['file']);
+							$fileext = strtolower(array_pop($filename));
+							
+							$targetdir = sprintf('%s/%s/Season %d', $watcheddir, $info['name'], $info['season']);
+							$targetname = sprintf('%s %dx%02d.%s', $info['name'], $info['season'], $info['episode'], $fileext);
+
+							$dest = getDestFile(preg_replace('@//@si', '/', $targetdir.'/'.$targetname));
+							
+							doEcho("\t\t", 'Moving from: ', $source, CRLF);
+							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
+							
+							doEcho($source, ' => ', $dest, CRLF);
+							// rename($source, $dest);
+						}
+					}
+					
+					$item['access_count'] = 0;
+				}
+			}
 		}
 	}
 	
@@ -109,6 +311,86 @@
 	 */
 	function handleReindex() {
 		global $config;
+		
+		// The var names in the config are huge, make them nicer for use here.
+		$basedir = $config['daemon']['reindex']['basedir'];
+		$dirs = $config['daemon']['reindex']['dirs'];
+		$downloaddir = $config['daemon']['reindex']['downloaddir'];
+		$patterns = $config['daemon']['reindex']['dirpatterns'];
+		$extentions = $config['daemon']['reindex']['extentions'];
+		$badfiles = $config['daemon']['reindex']['badfile'];
+		$usedirnames = $config['daemon']['reindex']['usedirnames'];
+		
+		// Get a listing of the directory
+		$dirlist = directoryToArray($downloaddir, false, false);
+		foreach ($dirlist as $dir) {
+			// Check if this is actually a directory.
+			if (isset($dir['contents'])) {
+				$deleteDir = false;
+				// Check if it matches any of the patterns.
+				$info = getEpisodeInfo($patterns, $dir['name']);
+				if ($info != null) {
+					// Print them.
+					doEcho('-------------------------------------------------------',CRLF);
+					doEcho('Found Downloaded show that matches pattern: ', $info['pattern'], CRLF, CRLF);
+					doEcho('Name: ', $info['name'], CRLF);
+					doEcho('Season: ', $info['season'], CRLF);
+					doEcho('Episode: ', $info['episode'], CRLF);
+					doEcho('Title: ', $info['title'], CRLF);
+					doEcho('-------------------------------------------------------',CRLF);
+					
+					// Look at all the files inside this directory.
+					$files = directoryToArray($downloaddir.'/'.$dir['name'], false, false);
+					foreach ($files as $file) {
+						if (isset($file['contents'])) { continue; }
+						
+						doEcho("\t", $file['name'], CRLF);
+						$filename = explode('.', $file['name']);
+						$fileext = strtolower(array_pop($filename));
+						$filename = implode('.', $filename);
+						
+						// Check if this file has a good file extention
+						if (in_array($fileext, $extentions)) {
+							// Check that its not a "bad" file
+							foreach ($badfiles as $badfile) {
+								if (stristr($file['name'], $badfile)) { continue 2; }
+							}
+							
+							doEcho("\t\t", 'Found good file: ', $file['name'], CRLF);
+							if ($usedirnames) {
+								$dirname = (isset($showinfo['dirname']) && in_array($showinfo['dirname'], $dirs)) ? $showinfo['dirname'] : $dirs[0];
+								$targetdir = sprintf('%s/%s/%s/Season %d', $basedir, $dirname, $info['name'], $info['season']);
+							} else {
+								$targetdir = sprintf('%s/%s', $basedir, $dirs[0]);
+							}
+							$targetname = sprintf('%s %dx%02d.%s', $info['name'], $info['season'], $info['episode'], $fileext);
+							
+							// Make sure the target directory exists
+							if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
+							
+							// Get the full target/source names
+							$source = preg_replace('@//@si', '/', $downloaddir.'/'.$dir['name'].'/'.$file['name']);
+							$dest = getDestFile(preg_replace('@//@si', '/', $targetdir.'/'.$targetname));
+							
+							doEcho("\t\t", 'Moving from: ', $source, CRLF);
+							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
+							
+							// Move it. If the move is successful then the directory will
+							// be deleted.
+							// If multiple files in this directory get moved, then the
+							// status of the last one will be used.
+							$deleteDir = false; //rename($source, $dest);
+						}
+					}
+				}
+				
+				if ($deleteDir) {
+					$dirname = preg_replace('@//@si', '/', $downloaddir.'/'.$dir['name']);
+					doEcho(CRLF, 'Removing: ', $dirname, CRLF);
+					rmdirr($dirname);
+				}
+			}
+		}
 	}
 	
 	/**
@@ -120,31 +402,42 @@
 		// Posts we need to download.
 		$posts = array();
 		
+		doEcho('Trying Auto Download..', CRLF);
+		// Look at all the shows that aired yesterday
 		foreach (getShows(true, -1, -1, false, $config['autodownload']['source']) as $show) {
 			$info = $show['info'];
 			// Check if this show is marked as automatic, (and is marked as important if onlyimportant is set true)
 			// Also check that the show hasn't already been downloaded.
 			$important = (($info['important'] && $config['download']['onlyimportant']) || !$config['download']['onlyimportant']);
 			if ($info['automatic'] && $important && !hasDownloaded($show['name'], $show['season'], $show['episode'])) {
+				doEcho('Show: ', $show['name'], CRLF);
 				// Search for this show, and get the optimal match.
 				ob_start();
 				$search = searchFor(getSearchString($show), false);
 				$buffer = ob_get_contents();
 				ob_end_clean();
 				
+				// Check for errors
 				if (preg_match('@function.file-get-contents</a>]: (.*)  in@U', $buffer, $matches)) {
-					// echo 'An error occured loading the search provider: ', $matches[1], EOL;
+					doEcho('An error occured loading the search provider: ', $matches[1], CRLF);
 				} else if ($search === false) {
-					// echo 'An error occured getting the search results: The search provider could not be loaded', EOL;
+					doEcho('An error occured getting the search results: The search provider could not be loaded', CRLF);
 				} else  if ($search->error['message'] && $search->error['message'] != '') {
-					// echo 'An error occured getting the search results: ', (string)$search->error['message'], EOL;
+					doEcho('An error occured getting the search results: ', (string)$search->error['message'], CRLF);
 				} else {
+					doEcho('Items: ');
+					doPrintR($items);
+					// No errors, get the best item
 					$items = $search->item;
 					$optimal = GetBestOptimal($items, $show['size'], false, true);
+					// If a best item was found
 					if ($optimal != -1) {
+						doEcho('Best: ', (int)$best->nzbid, CRLF);
 						$best = $items[$optimal];
 						// Try to download.
 						$result = downloadNZB((int)$best->nzbid);
+						doEcho('Result: ');
+						doPrintR($result);
 						if ($result['status']) {
 							// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
 							setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);

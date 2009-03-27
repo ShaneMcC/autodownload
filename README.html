@@ -4,16 +4,19 @@
 <p>Once shows have been downloaded they are then sorted into either pre-specified directories, or into an &quot;unwatched&quot; directory to allow the user to see what shows they havn't yet watched. It is also possible for the scripts to automatically move shows from the &quot;unwatched&quot; directory into a &quot;watched&quot; directory once the show has been watched. (requires inotify)</p>
 
 <p>Currently due to limitations imposed by the terms and conditions of newzbin.com, the actual code to search newzbin can not be released.</p>
-
+</div>
+<div class="readme">
 <div class="title">obtaining the code</div>
 <p>The code for this project can be obtained using either of the following:
 <ul>
-	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">git://git.soren.co.uk/autodownload.git/</span></span>
-	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">http://git.soren.co.uk/r/autodownload.git/</span></span>
+	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">git://git.soren.co.uk/autodownload.git/</span></span></li>
+	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">http://git.soren.co.uk/r/autodownload.git/</span></span></li>
 </ul>
 </p>
+</div>
+<div class="readme">
 <div class="title">requirements</div>
-<p>These scripts require php5-cli, and the pecl package inotify<br>
+<p>These scripts require php5-cli, and the pecl package inotify<br />
 These can be installed (on ubuntu) by using:
 <pre>
 sudo apt-get install php5-cli php5-dev
@@ -21,7 +24,8 @@ sudo pecl install inotify-`pecl remote-info inotify | grep ^Latest | head -n 1 |
 sudo su -c "echo 'extension=inotify.so' >> /etc/php5/cli/php.ini"
 </pre>
 </p>
-
+</div>
+<div class="readme">
 <div class="title">using the code</div>
 <p>Once the code has been downloaded, edit <span style="font-family: monospace">config.php</span> to your liking and then run <span style="font-family: monospace">daemon.php</span> to handle the automated functions.</p>
 

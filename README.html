@@ -1,0 +1,30 @@
+<!-- [Readme for gitweb] -->
+<p>This collection of php scripts is designed to be used for automated searching and downloading (using <a href="http://www.hellanzb.com/">hellanzb</a>) of new TV Shows from usenet on a daily basis, based on information from <a href="http://on-my.tv/">http://on-my.tv/</a>, <a href="http://pogdesign.co.uk/cat/">http://pogdesign.co.uk/cat/</a> or <a href="http://tvrage.com/">http://tvrage.com/</a>.</p>
+
+<p>Once shows have been downloaded they are then sorted into either pre-specified directories, or into an &quot;unwatched&quot; directory to allow the user to see what shows they havn't yet watched. It is also possible for the scripts to automatically move shows from the &quot;unwatched&quot; directory into a &quot;watched&quot; directory once the show has been watched. (requires inotify)</p>
+
+<p>Currently due to limitations imposed by the terms and conditions of newzbin.com, the actual code to search newzbin can not be released.</p>
+
+<div class="title">obtaining the code</div>
+<p>The code for this project can be obtained using either of the following:
+<ul>
+	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">git://git.soren.co.uk/autodownload.git/</span></span>
+	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">http://git.soren.co.uk/r/autodownload.git/</span></span>
+</ul>
+</p>
+<div class="title">requirements</div>
+<p>These scripts require php5-cli, and the pecl package inotify<br>
+These can be installed (on ubuntu) by using:
+<pre>
+sudo apt-get install php5-cli php5-dev
+sudo pecl install inotify-`pecl remote-info inotify | grep ^Latest | head -n 1 | awk '{print $2}'`
+sudo su -c "echo 'extension=inotify.so' >> /etc/php5/cli/php.ini"
+</pre>
+</p>
+
+<div class="title">using the code</div>
+<p>Once the code has been downloaded, edit <span style="font-family: monospace">config.php</span> to your liking and then run <span style="font-family: monospace">daemon.php</span> to handle the automated functions.</p>
+
+<p>The contents of the <span style="font-family: monospace">www</span> directory should be made available as specified by <span style="font-family: monospace">$config['tv']['urlbase']</span>. The directory structure and layout must remain the same (so no moving the contents into <span style="font-family: monospace">/var/www/</span> unless you want to move the other scripts into <span style="font-family: monospace">/var</span>) otherwise the scripts will be unable to find each other.</p>
+
+<!-- [/Readme for gitweb] -->

@@ -6,6 +6,9 @@
 	$config['daemon']['pid'] = dirname(__FILE__).'/daemon.pid';
 	// Should the daemon fork?
 	$config['daemon']['fork'] = false;
+	// How many seconds should the daemon sleep inbetween loops?
+	// Default is 5
+	$config['daemon']['looptime'] = 5;
 	// Times that the daemon should check for new TV.
 	// This is an array containing "time arrays".
 	// "time arrays" are arrays with keys corresponding to the values of
@@ -56,10 +59,10 @@
 	$config['daemon']['reindex']['usedirnames'] = false;
 	// If inotify is watching a file, how many IN_ACCESS events need to be
 	// generated to consider a file as watched?
-	// This should be at least 10 really, which requires 50 seconds of watching
-	// before a file is considered moveable. Adjust as needed. value * 5 = seconds
-	// required before allowing to be reindexed.
-	$config['daemon']['reindex']['inotify_count'] = 10;
+	// This should be at least 10, preferably higher.
+	// The count is increased by 1 every time the daemon loops and an inotify
+	// event was recieved.
+	$config['daemon']['reindex']['inotify_count'] = 100;
 
 	//----------------------------------------------------------------------------
 	// Automatic Downloading settings.

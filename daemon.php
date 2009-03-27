@@ -15,9 +15,9 @@
 	
 	$daemon['cli'] = parseCLIParams($_SERVER['argv']);
 	if (isset($daemon['cli']['help'])) {
-		echo 'Usage: ', $_SERVER['argv'][0], ' [options]', CRLF, CRLF;
-		echo 'Options:', CRLF, CRLF;
-		echo showCLIParams(), CRLF;
+		doEcho('Usage: ', $_SERVER['argv'][0], ' [options]', CRLF, CRLF);
+		doEcho('Options:', CRLF, CRLF);
+		doEcho(showCLIParams(), CRLF);
 		die();
 	}
 	
@@ -29,7 +29,7 @@
 	 */
 	function doDaemonLoop($type, $args) {
 		// global $__daemontools;
-		// echo 'doDaemonLoop: ', $__daemontools['callbacks'][$type]['description'], CRLF;
+		// doEcho('doDaemonLoop: ', $__daemontools['callbacks'][$type]['description'], CRLF);
 		
 		switch ($type) {
 			case DAEMONTOOLS_LOOP:
@@ -146,14 +146,14 @@
 		
 		$item['file'] = $file;
 		$item['access_count'] = 0;
-		$id = inotify_add_watch($daemon['inotify']['fd'], $watchdir.'/'.$file, IN_ACCESS | IN_CLOSE_NOWRITE);
+		$id = inotify_add_watch($daemon['inotify']['fd'], $watchdir.'/'.$file, IN_ACCESS | IN_CLOSE);
 		// Store this watch so we can perform associated actions later
 		$daemon['inotify']['files'][$id] = $item;
 		// Store a reverse mapping of filenames -> ids so we can get the id
 		// from a filename.
 		$daemon['inotify']['file_names'][$file] = $id;
 		
-		doEcho("\t", 'Added watch for: ', $file, CRLF);
+		doEcho("\t", 'Added watch for: ', $file, ' [', $id,']', CRLF);
 	}
 	
 	/**
@@ -218,15 +218,18 @@
 			stream_set_blocking($daemon['inotify']['fd'], 0);
 		}
 		
+		// Record which nodes hvae been accessed this loop.
+		// Sometimes the loop will only get 1 event for a particular file, however
+		// sometimes it gets upwards of 500, this really breaks things, so this
+		// is used to make sure we only increment the counter for IN_ACCESS once
+		// per file, per loop, regardless of how many events we get.
+		$has_accessed = array();
+		
 		while (($events = inotify_read($daemon['inotify']['fd'])) !== false) {
+			doEcho("\t\t\t\t\t\t\t\t\t\t", 'Got ', count($events), ' events!', CRLF);
 			foreach ($events as $event) {
-				// print_r($event);
+				// doPrintR($event);
 			
-				// $item = isset($daemon['inotify']['files'][$event['wd']]) ? $daemon['inotify']['files'][$event['wd']] : array() ;
-				if (isset($daemon['inotify']['files'][$event['wd']])) {
-					$item = &$daemon['inotify']['files'][$event['wd']];
-				} else { $item = array(); }
-				
 				// Have we gained a file from being created or moved in?
 				if ((($event['mask'] & IN_CREATE) > 0 || ($event['mask'] & IN_MOVED_TO) > 0) && ($event['mask'] & IN_ISDIR) == 0) {
 					// Add watch for new file
@@ -241,34 +244,39 @@
 					
 					delINotifyWatch($event['name']);
 				}
-				
+
+				if (!isset($daemon['inotify']['files'][$event['wd']])) { continue; }
+
 				// Has a watched file been accessed
-				if ($event['mask'] == IN_ACCESS && isset($item['access_count'])) {
-					// Record how many IN_ACCESS events we get for a file.
-					$item['access_count']++;
-					doEcho($item['file'], ' has been accessed.', CRLF);
+				if (($event['mask'] & IN_ACCESS) > 0 && isset($daemon['inotify']['files'][$event['wd']]['access_count'])) {
+					if (!in_array($event['wd'], $has_accessed)) {
+						// Record how many IN_ACCESS events we get for a file.
+						$daemon['inotify']['files'][$event['wd']]['access_count']++;
+						doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' has been accessed. [', $daemon['inotify']['files'][$event['wd']]['access_count'],']', CRLF);
+						$has_accessed[] = $event['wd'];
+					}
 				}
 				
 				// Has a watched file been closed?
-				if ($event['mask'] == IN_CLOSE_NOWRITE && isset($item['access_count'])) {
+				if (($event['mask'] & IN_CLOSE_NOWRITE) > 0 && isset($daemon['inotify']['files'][$event['wd']]['access_count'])) {
 					// File was closed, check if it was accessed enough to warrant being
 					// considered as watched.
-					doEcho($item['file'], ' has been accessed ', $item['access_count'], ' times.', CRLF);
-					if ($item['access_count'] > $config['daemon']['reindex']['inotify_count']) {
-						doEcho($item['file'], ' is being marked as watched.', CRLF);
+					doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' has been accessed ', $daemon['inotify']['files'][$event['wd']]['access_count'], ' times.', CRLF);
+					if ($daemon['inotify']['files'][$event['wd']]['access_count'] > $config['daemon']['reindex']['inotify_count']) {
+						doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is being marked as watched.', CRLF);
 						
 						// Unwatch this file
-						delINotifyWatch($item['file']);
+						delINotifyWatch($daemon['inotify']['files'][$event['wd']]['file']);
 						
 						// Get the source and of this file.
-						$source = preg_replace('@//@si', '/', $watchdir.'/'.$item['file']);
+						$source = preg_replace('@//@si', '/', $watchdir.'/'.$daemon['inotify']['files'][$event['wd']]['file']);
 						
 						// Check if it matches any of the patterns.
 						$patterns = $config['daemon']['reindex']['filepatterns'];
 						
-						$info = getEpisodeInfo($config['daemon']['reindex']['filepatterns'], $item['file']);
+						$info = getEpisodeInfo($config['daemon']['reindex']['filepatterns'], $daemon['inotify']['files'][$event['wd']]['file']);
 						if ($info != null) {
-							$filename = explode('.', $item['file']);
+							$filename = explode('.', $daemon['inotify']['files'][$event['wd']]['file']);
 							$fileext = strtolower(array_pop($filename));
 							
 							$targetdir = sprintf('%s/%s/Season %d', $watcheddir, $info['name'], $info['season']);
@@ -280,24 +288,27 @@
 							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
 							
 							doEcho($source, ' => ', $dest, CRLF);
-							doReport(array('source' => 'daemon::handleINotify', 'message' => $item['file'].' has been archived as watched.'));
+							doReport(array('source' => 'daemon::handleINotify', 'message' => $daemon['inotify']['files'][$event['wd']]['file'].' has been archived as watched.'));
 							
 							// Make sure the target directory exists
 							if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
-							if (!rename($source, $dest)) {
+/*							if (!rename($source, $dest)) {
 								// Rename failed.
 								// If the file still exists (its possible for a file to get lost
 								// in a failed rename) then readd the watch.
 								
-								addINotifyWatch($item['file']);
-							}
+								addINotifyWatch($daemon['inotify']['files'][$event['wd']]['file']);
+							}*/
 						}
 					}
 					
 					// If the watch wasn't removed, then reset the access count.
 					if (isset($daemon['inotify']['files'][$event['wd']])) {
-						$item['access_count'] = 0;
+						$daemon['inotify']['files'][$event['wd']]['access_count'] = 0;
 					}
+				} else if (($event['mask'] & IN_CLOSE) > 0 && isset($daemon['inotify']['files'][$event['wd']]['access_count'])) {
+					// Reset the counter on all close events.
+					$daemon['inotify']['files'][$event['wd']]['access_count'] = 0;
 				}
 			}
 		}
@@ -463,8 +474,8 @@
 	if (isset($daemon['cli']['reindex'])) { $daemonise = false; handleReindex(); }
 	if (isset($daemon['cli']['autotv']) || isset($daemon['cli']['autotv-force'])) { $daemonise = false; handleCheckAuto(); }
 	
-	// Start the daemon so that it loops every 5 seconds.
+	// Start the daemon so that it loops every few seconds seconds.
 	if ($daemonise) {
-		startDaemon($pid, $fork, doDaemonLoop, (5 * 1000), __FILE__);
+		startDaemon($pid, $fork, doDaemonLoop, ($config['daemon']['looptime'] * 1000), __FILE__);
 	}
 ?>

@@ -383,13 +383,13 @@
 	 *                               a better negative match? The negative match
 	 *                               will only be considered better if it is
 	 *                               over 80% of the optimal.
-	 * @return The index of the best match.
+	 * @return The index of the best match, or -1 if none was found.
 	 */
 	function GetBestOptimal($matches,$optimal,$allownegative = false,$allownegativeifdouble = false) {
 		// global $config;
 		// $target_optimal = ($config['download']['highdef']) ? $optimal * 2 : $optimal;
 		$target_optimal = $optimal;
-		$result = 0;
+		$result = -1;
 		$dev = -1;
 		for ($i = 0; $i != count($matches); $i++) {
 			$val = (float)str_replace(',', '', (string)$matches[$i]['sizemb']);

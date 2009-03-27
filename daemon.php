@@ -8,6 +8,7 @@
 	addCLIParam('b', 'background', 'Do Fork. (Takes priority over --foreground)');
 	addCLIParam('r', 'reindex', 'Force a manual reindex, don\'t start daemon.');
 	addCLIParam('a', 'autotv', 'Run a manual AutoTV check, don\'t start daemon.');
+	addCLIParam('', 'autotv-force', 'Run a manual AutoTV check and redownload shows marked as "got", don\'t start daemon.');
 	addCLIParam('', 'noreindex', 'Don\'t periodically reindex.');
 	addCLIParam('', 'noautotv', 'Don\'t periodically run AutoTV checks.');
 	addCLIParam('', 'pid', 'Specify an alternative PID file.', true);
@@ -395,7 +396,7 @@
 	 * Handle checking for automatic downloads
 	 */
 	function handleCheckAuto() {
-		global $config;
+		global $config, $daemon;
 		
 		// Posts we need to download.
 		$posts = array();
@@ -407,7 +408,7 @@
 			// Check if this show is marked as automatic, (and is marked as important if onlyimportant is set true)
 			// Also check that the show hasn't already been downloaded.
 			$important = (($info['important'] && $config['download']['onlyimportant']) || !$config['download']['onlyimportant']);
-			if ($info['automatic'] && $important && !hasDownloaded($show['name'], $show['season'], $show['episode'])) {
+			if ($info['automatic'] && $important && (isset($daemon['cli']['autotv-force']) || !hasDownloaded($show['name'], $show['season'], $show['episode']))) {
 				doEcho('Show: ', $show['name'], CRLF);
 				// Search for this show, and get the optimal match.
 				ob_start();
@@ -423,23 +424,25 @@
 				} else  if ($search->error['message'] && $search->error['message'] != '') {
 					doEcho('An error occured getting the search results: ', (string)$search->error['message'], CRLF);
 				} else {
-					doEcho('Items: ');
-					doPrintR($items);
 					// No errors, get the best item
 					$items = $search->item;
+					doEcho('Items: ');
+					doPrintR($items);
 					$optimal = GetBestOptimal($items, $show['size'], false, true);
 					// If a best item was found
-					if ($optimal != -1) {
-						doEcho('Best: ', (int)$best->nzbid, CRLF);
+					if (count(items) > 0 && $optimal != -1) {
 						$best = $items[$optimal];
+						$bestid = (int)$best->nzbid;
+						doEcho('Optimal: ', $optimal, CRLF);
+						doEcho('Best: ', $bestid, CRLF);
 						// Try to download.
-						$result = downloadNZB((int)$best->nzbid);
+						$result = downloadNZB($bestid);
 						doEcho('Result: ');
 						doPrintR($result);
 						if ($result['status']) {
 							// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
 							setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
-							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d)', $show['name'], $show['season'], $show['episode'], $show['title'], (int)$best->nzbid)));
+							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d)', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid)));
 						}
 					}
 				}
@@ -458,7 +461,7 @@
 	// Should the daemon loop be started?
 	$daemonise = true;
 	if (isset($daemon['cli']['reindex'])) { $daemonise = false; handleReindex(); }
-	if (isset($daemon['cli']['autotv'])) { $daemonise = false; handleCheckAuto(); }
+	if (isset($daemon['cli']['autotv']) || isset($daemon['cli']['autotv-force'])) { $daemonise = false; handleCheckAuto(); }
 	
 	// Start the daemon so that it loops every 5 seconds.
 	if ($daemonise) {

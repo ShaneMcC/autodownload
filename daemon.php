@@ -279,6 +279,7 @@
 							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
 							
 							doEcho($source, ' => ', $dest, CRLF);
+							doReport(array('source' => 'daemon::handleINotify', 'message' => $item['file'].' has been archived as watched.'));
 							
 							// Make sure the target directory exists
 							if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
@@ -370,6 +371,8 @@
 							doEcho("\t\t", 'Moving from: ', $source, CRLF);
 							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
 							
+							doReport(array('source' => 'daemon::handleReindex', 'message' => sprintf('Download Completed: %s %dx%02d', $info['name'], $info['season'], $info['episode'])));
+							
 							// Move it. If the move is successful then the directory will
 							// be deleted.
 							// If multiple files in this directory get moved, then the
@@ -436,6 +439,7 @@
 						if ($result['status']) {
 							// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
 							setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
+							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d)', $show['name'], $show['season'], $show['episode'], $show['title'], (int)$best->nzbid)));
 						}
 					}
 				}

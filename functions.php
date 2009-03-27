@@ -527,4 +527,22 @@
 			return $result;
 		}
 	}
+	
+	// Include functions.report.php if it exists.
+	// This should provide a function: doReport($info) { } which can then
+	// notify the user however they want about events.
+	// $info is an array containing keys related to the event to report.
+	//   * source - Source of event
+	//   * message - Message to report
+	$doreport_file = dirname(__FILE__).'/functions.report.php';
+	if (file_exists($doreport_file)) {
+		include_once($doreport_file);
+	} else {
+		/**
+		 * Report an event to the user.
+		 *
+		 * @param $info Info array to report
+		 */
+		function doReport($info) { }
+	}
 ?>

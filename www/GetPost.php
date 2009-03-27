@@ -16,6 +16,8 @@
 		} else {
 			$title .= ' (Repeat Download)';
 		}
+		
+		doReport(array('source' => 'GetPost', 'message' => sprintf('Beginning manual download of: %s %dx%02d [%s] (NZB: %d)', $show['name'], $show['season'], $show['episode'], $show['title'], $_REQUEST['nzbid'])));
 	}
 	
 	// URL to newzbin page.

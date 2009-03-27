@@ -25,11 +25,13 @@
 	 * @return Array containing information from the database for the given show.
 	 */
 	function getShowInfo($showname) {
-		global $Auto, $config, $Search, $Attributes, $important;
+		global $Auto, $config, $Search, $Attributes, $important, $Alias;
 		
 		$name = (string)$showname;
+		if (isset($Alias['$name'])) { $name = $Alias['$name']; }
 		
 		$result = array();
+		$result['request'] = (string)$showname;
 		$result['name'] = $name;
 		$result['automatic'] = isset($Auto[$name]);
 		$result['searchstring'] = (isset($Search[$name])) ? $Search[$name] : '' ;

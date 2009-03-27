@@ -157,7 +157,7 @@
 		
 		foreach ($TV->show as $show) {
 			if ($show->date['time'] >= $starttime && $show->date['time'] <= $endtime) {
-				$thisShow['name'] = (string)$show->name;
+				$thisShow['name'] = cleanName((string)$show->name, false);
 				$thisShow['time'] = (int)$show->date['time'];
 				$thisShow['season'] = (int)$show->season;
 				$thisShow['episode'] = (int)$show->episode;
@@ -235,9 +235,11 @@
 	 *   - Get the real case of the name from the database
 	 *
 	 * @param $name Name to clean up
+	 * @param $askDatabase (Default = true) Check with the database to get the
+	 *                     real case for the name?
 	 * @return Cleaned up name.
 	 */
-	function cleanName($name) {
+	function cleanName($name, $askDatabase = true) {
 		// replace any .s or _s that were used in place of spaces, with spaces.
 		$name = preg_replace('@([a-zA-Z0-9])\.([a-zA-Z0-9])@', '\1 \2', $name);
 		
@@ -251,9 +253,11 @@
 		$name = ucfirst($name);
 		
 		// Check with the database for the real case of the name.
-		$showinfo = getShowInfo($name);
-		$name = $showinfo['name'];
-				
+		if($askDatabase) {
+			$showinfo = getShowInfo($name);
+			$name = $showinfo['name'];
+		}
+		
 		return $name;
 	}
 	

@@ -24,3 +24,12 @@ CREATE TABLE `shows` (
   `attributes` text,
   PRIMARY KEY  (`name`)
 ) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- This table stores aliases for shows.
+-- Sometimes shows use a different name on the calendar than on newzbin, this
+-- table helps match those together.
+CREATE TABLE `aliases` (
+  `alias` varchar(255) NOT NULL,
+  `show` varchar(255) NOT NULL,
+  PRIMARY KEY  (`alias`,`show`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;

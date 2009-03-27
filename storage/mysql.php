@@ -44,6 +44,7 @@
 		$mysqli = connectSQL();
 		
 		$result = array();
+		$result['request'] = (string)$showname;
 		$result['name'] = (string)$showname;
 		$result['automatic'] = false;
 		$result['searchstring'] = '';
@@ -52,8 +53,8 @@
 		$result['important'] = false;
 		$result['size'] = '400';
 		
-		if ($stmt = $mysqli->prepare('SELECT name,automatic,searchstring,dirname,important,size,attributes FROM shows WHERE name=?')) {
-			$stmt->bind_param('s', $result['name']);
+		if ($stmt = $mysqli->prepare('SELECT shows.name,shows.automatic,shows.searchstring,shows.dirname,shows.important,shows.size,shows.attributes FROM shows, aliases WHERE (aliases.show = shows.name AND aliases.alias = ?) OR (shows.name = ?);')) {
+			$stmt->bind_param('ss', $result['name'], $result['name']);
 			$stmt->execute();
 			$stmt->store_result();
 			if ($stmt->num_rows > 0) {

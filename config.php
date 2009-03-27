@@ -118,7 +118,7 @@
 	// Database username
 	$config['storage']['mysql']['user'] = 'autodownload';
 	// Database password
-	$config['storage']['mysql']['pass'] = 'wf345fr5yrt';
+	$config['storage']['mysql']['pass'] = 'password';
 	// Database name
 	$config['storage']['mysql']['database'] = 'autodownload';
 	

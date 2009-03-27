@@ -5,17 +5,17 @@
 
 <p>Currently due to limitations imposed by the terms and conditions of newzbin.com, the actual code to search newzbin can not be released.</p>
 </div>
-<div class="readme">
 <div class="title">obtaining the code</div>
+<div class="readme">
 <p>The code for this project can be obtained using either of the following:
 <ul>
-	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">git://git.soren.co.uk/autodownload.git/</span></span></li>
-	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">http://git.soren.co.uk/r/autodownload.git/</span></span></li>
+	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">git://git.soren.co.uk/shane/autodownload.git/</span></span></li>
+	<li> <span style="font-family: monospace">git clone <span style="font-style: italic">http://git.soren.co.uk/r/shane/autodownload.git/</span></span></li>
 </ul>
 </p>
 </div>
-<div class="readme">
 <div class="title">requirements</div>
+<div class="readme">
 <p>These scripts require php5-cli, and the pecl package inotify<br />
 These can be installed (on ubuntu) by using:
 <pre>
@@ -25,8 +25,8 @@ sudo su -c "echo 'extension=inotify.so' >> /etc/php5/cli/php.ini"
 </pre>
 </p>
 </div>
-<div class="readme">
 <div class="title">using the code</div>
+<div class="readme">
 <p>Once the code has been downloaded, edit <span style="font-family: monospace">config.php</span> to your liking and then run <span style="font-family: monospace">daemon.php</span> to handle the automated functions.</p>
 
 <p>The contents of the <span style="font-family: monospace">www</span> directory should be made available as specified by <span style="font-family: monospace">$config['tv']['urlbase']</span>. The directory structure and layout must remain the same (so no moving the contents into <span style="font-family: monospace">/var/www/</span> unless you want to move the other scripts into <span style="font-family: monospace">/var</span>) otherwise the scripts will be unable to find each other.</p>

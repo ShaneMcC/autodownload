@@ -2,3 +2,5 @@ www/sources/*.cache
 www/nzb/NZBCookies.*.php
 www/nzb/index.php
 config.user.php
+daemon.pid
+functions.report.php

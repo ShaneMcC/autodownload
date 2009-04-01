@@ -265,10 +265,7 @@
 					if ($daemon['inotify']['files'][$event['wd']]['access_count'] > $config['daemon']['reindex']['inotify_count']) {
 						doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is being marked as watched.', CRLF);
 						
-						// Unwatch this file
-						delINotifyWatch($daemon['inotify']['files'][$event['wd']]['file']);
-						
-						// Get the source and of this file.
+						// Get the source of this file.
 						$source = preg_replace('@//@si', '/', $watchdir.'/'.$daemon['inotify']['files'][$event['wd']]['file']);
 						
 						// Check if it matches any of the patterns.
@@ -292,13 +289,13 @@
 							
 							// Make sure the target directory exists
 							if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
-/*							if (!rename($source, $dest)) {
+							if (!rename($source, $dest)) {
 								// Rename failed.
 								// If the file still exists (its possible for a file to get lost
 								// in a failed rename) then readd the watch.
 								
 								addINotifyWatch($daemon['inotify']['files'][$event['wd']]['file']);
-							}*/
+							}
 						}
 					}
 					
@@ -324,7 +321,8 @@
 		$basedir = $config['daemon']['reindex']['basedir'];
 		$dirs = $config['daemon']['reindex']['dirs'];
 		$downloaddir = $config['daemon']['reindex']['downloaddir'];
-		$patterns = $config['daemon']['reindex']['dirpatterns'];
+		$folderpatterns = $config['daemon']['reindex']['dirpatterns'];
+		$filepatterns = $config['daemon']['reindex']['filepatterns'];
 		$extentions = $config['daemon']['reindex']['extentions'];
 		$badfiles = $config['daemon']['reindex']['badfile'];
 		$usedirnames = $config['daemon']['reindex']['usedirnames'];
@@ -336,15 +334,15 @@
 			if (isset($dir['contents'])) {
 				$deleteDir = false;
 				// Check if it matches any of the patterns.
-				$info = getEpisodeInfo($patterns, $dir['name']);
-				if ($info != null) {
+				$folderinfo = getEpisodeInfo($folderpatterns, $dir['name']);
+				if ($folderinfo != null) {
 					// Print them.
 					doEcho('-------------------------------------------------------',CRLF);
-					doEcho('Found Downloaded show that matches pattern: ', $info['pattern'], CRLF, CRLF);
-					doEcho('Name: ', $info['name'], CRLF);
-					doEcho('Season: ', $info['season'], CRLF);
-					doEcho('Episode: ', $info['episode'], CRLF);
-					doEcho('Title: ', $info['title'], CRLF);
+					doEcho('Found Downloaded show that matches pattern: ', $folderinfo['pattern'], CRLF, CRLF);
+					doEcho('Name: ', $folderinfo['name'], CRLF);
+					doEcho('Season: ', $folderinfo['season'], CRLF);
+					doEcho('Episode: ', $folderinfo['episode'], CRLF);
+					doEcho('Title: ', $folderinfo['title'], CRLF);
 					doEcho('-------------------------------------------------------',CRLF);
 					
 					// Look at all the files inside this directory.
@@ -365,6 +363,11 @@
 							}
 							
 							doEcho("\t\t", 'Found good file: ', $file['name'], CRLF);
+							$info = null;
+							if ($folderinfo['usefilepattern']) {
+								$info = getEpisodeInfo($filepatterns, $file['name']);
+							}
+							if ($info == null) { $info = $folderinfo; }
 							if ($usedirnames) {
 								$dirname = (isset($showinfo['dirname']) && in_array($showinfo['dirname'], $dirs)) ? $showinfo['dirname'] : $dirs[0];
 								$targetdir = sprintf('%s/%s/%s/Season %d', $basedir, $dirname, $info['name'], $info['season']);

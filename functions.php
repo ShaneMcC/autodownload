@@ -207,6 +207,8 @@
 	 * @return Array containing show name, season, episode and title, or null.
 	 */
 	function getEpisodeInfo($patterns, $name) {
+		global $config;
+		
 		foreach ($patterns as $pattern => $info) {
 			doEcho('Trying: ', $pattern, CRLF);
 			if (preg_match($pattern, $name, $matches)) {
@@ -216,6 +218,7 @@
 				$result['season'] = isset($info['season']) ? $matches[$info['season']] : '00';
 				$result['episode'] = isset($info['episode']) ? $matches[$info['episode']] : '00';
 				$result['title'] = isset($info['title']) ? $matches[$info['title']] : 'Episode '.$result['season'].'x'.$result['episode'];
+				$result['usefilepattern'] = isset($info['usefilepattern']) ? $info['usefilepattern'] : $config['daemon']['reindex']['usefilepatterns'];
 				
 				$result['name'] = cleanName($result['name']);
 					

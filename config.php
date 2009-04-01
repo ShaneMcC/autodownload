@@ -38,13 +38,22 @@
 	// are an array which shows where each key-part of the match is.
 	$config['daemon']['reindex']['dirpatterns'] = array('/^(.*)[_ ]-[_ ]([0-9]+)[Xx]([0-9\-]+)[_ ]-[_ ]([^_]+)(?:_.*)?$/U' => array('name' => 1, 'season' => 2, 'episode' => 3, 'title' => 4),
 	                                                    '/^(.*)[_ ]-[_ ]([0-9]+)[Xx]([0-9\-]+).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
+	                                                    '/^selected_files_[0-9]+-[0-9]+$/U' => array('usefilepattern' => true),
 	                                                   );
 	// Patterns used to match file names when using inotify
 	$config['daemon']['reindex']['filepatterns'] = array('/^(.*)\.s([0-9]+)e([0-9][0-9]).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
 	                                                     '/^(.*)\.([0-9]+)[Xx]?([0-9][0-9]).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
 	                                                     '/^(.*) ([0-9]+)[Xx]?([0-9][0-9]).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
 	                                                    );
-
+	
+	// Should filepatterns above be used when comparing files inside a directory
+	// during reindexing? (If true and a pattern matches, then the info from the
+	// file is used instead of the info from the folder).
+	// This is primarily useful for all-in-one seasons downloads.
+	// This can be explicitly set/unset for a given dir pattern by adding a
+	// 'usefilepattern' => true/false key to the array.
+	$config['daemon']['reindex']['usefilepatterns'] = false;
+	
 	// File extentions that we care about when reindexing.
 	$config['daemon']['reindex']['extentions'] = array('avi', 'mkv', 'mpg', 'mpeg', 'flv');
 	// If any of the words in this array are in the file name we ignore it even if

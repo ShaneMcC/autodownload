@@ -77,7 +77,7 @@
 	// Automatic Downloading settings.
 	//----------------------------------------------------------------------------
 	// Source to use for automatic downloads. ('' for default);
-	$config['autodownload']['source'] = 'pogdesign';
+	$config['autodownload']['source'] = '';
 
 	//----------------------------------------------------------------------------
 	// How should we search newzbin?
@@ -185,7 +185,7 @@
 	// Sources for TV listing
 	//----------------------------------------------------------------------------
 	// Default source?
-	$config['tv']['default_source'] = 'on-my.tv';
+	$config['tv']['default_source'] = 'merge';
 	// What is the web-accessible path to folder for the sources?
 	$config['tv']['urlbase'] = 'http://localhost/new/sources/';
 	// What is the path to folder for the sources?

@@ -415,6 +415,7 @@
 		// Posts we need to download.
 		$posts = array();
 		
+		doReport(array('source' => 'daemon::handleCheckAuto', 'message' => 'Beginning Auto Download Check.'));
 		doEcho('Trying Auto Download..', CRLF);
 		// Look at all the shows that aired yesterday
 		foreach (getShows(true, -1, -1, false, $config['autodownload']['source']) as $show) {

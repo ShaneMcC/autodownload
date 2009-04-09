@@ -59,10 +59,10 @@
 		$items = $search->item;
 		$optimal = GetBestOptimal($items, $show['size'], false, true);
 		
-		echo '<pre>';
+		/*echo '<pre>';
 		print_r($items);
 		print_r($search);
-		echo '</pre>';
+		echo '</pre>';*/
 		
 		$i = 0;
 		foreach ($items as $item) {

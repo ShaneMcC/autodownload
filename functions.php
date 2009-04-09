@@ -210,9 +210,9 @@
 		global $config;
 		
 		foreach ($patterns as $pattern => $info) {
-			doEcho('Trying: ', $pattern, CRLF);
+			if (function_exists('doEcho')) { doEcho('Trying: ', $pattern, CRLF); }
 			if (preg_match($pattern, $name, $matches)) {
-				doPrintR($matches);
+				if (function_exists('doPrintR')) { doPrintR($matches); }
 				$result['pattern'] = $pattern;
 				$result['name'] = isset($info['name']) ? $matches[$info['name']] : 'Unknown';
 				$result['season'] = isset($info['season']) ? $matches[$info['season']] : '00';
@@ -227,6 +227,31 @@
 		}
 		
 		return null;
+	}
+	
+	/**
+	 * Check if the given search result is a good match for the given show?
+	 * (Sometimes generic named shows "life" "house" "heroes" etc can return
+	 * results for other shows that are similar, this is used to detect the
+	 * likelyhood of this.)
+	 * AutoTV won't download any unlikely shows, GetTV.php will show them as red,
+	 * getOptimal will ignore them.
+	 * This uses $config['daemon']['reindex']['dirpatterns'] to extract the show
+	 * name and then checks if it matches the given show name.
+	 *
+	 * @param $searchresult Result to check.
+	 * @param $show Show to check. (if no 'name' param exists, returns true)
+	 * @return true of false if this is considered a good match.
+	 */
+	function isGoodMatch($searchresult, $show) {
+		global $config;
+		if (!isset($show['name'])) { return true; }
+		
+		$info = getEpisodeInfo($config['daemon']['reindex']['dirpatterns'], $searchresult);
+		if ($info != null) {
+			return (cleanName($info['name']) == cleanName($show['name']));
+		}
+		return false;
 	}
 	
 	/**
@@ -390,15 +415,18 @@
 	 *                               a better negative match? The negative match
 	 *                               will only be considered better if it is
 	 *                               over 80% of the optimal.
+	 * @param $show If this parameter is given, isGoodMatch will be used to ignore
+	 *              bad shows.
 	 * @return The index of the best match, or -1 if none was found.
 	 */
-	function GetBestOptimal($matches,$optimal,$allownegative = false,$allownegativeifdouble = false) {
+	function GetBestOptimal($matches,$optimal,$allownegative = false,$allownegativeifdouble = false, $show = array()) {
 		// global $config;
 		// $target_optimal = ($config['download']['highdef']) ? $optimal * 2 : $optimal;
 		$target_optimal = $optimal;
 		$result = -1;
 		$dev = -1;
 		for ($i = 0; $i != count($matches); $i++) {
+			if (!isGoodMatch((string)$matches[$i]->name, $show)) { continue; }
 			$val = (float)str_replace(',', '', (string)$matches[$i]['sizemb']);
 			if ($val == $target_optimal) {
 				$result = $i;
@@ -414,10 +442,10 @@
 		}
 		if ($allownegative === false) {
 			if ($dev < 0) {
-				$result = GetBestOptimal($matches,$optimal,true);
+				$result = GetBestOptimal($matches,$optimal,true, false, $show);
 			} else if ($allownegativeifdouble === true && $cdev > ($target_optimal * 2)) {
 				$currentResult = $result;
-				$possibleResult = GetBestOptimal($matches,$optimal,true);
+				$possibleResult = GetBestOptimal($matches,$optimal,true, false, $show);
 				
 				$minumum = $target_optimal * 0.8;
 				$val = (float)str_replace(',', '', (string)$matches[$possibleResult]['sizemb']);
@@ -465,7 +493,7 @@
 	// actually being retrieved from.
 	// Defaults to dummy methods if the file doesn't exist.
 	$storage_file = dirname(__FILE__).'/storage/'.$config['storage']['type'].'.php';
-	if (file_exists($storage_file)) {
+	if (file/*_exists*/($storage_file)) {
 		include_once($storage_file);
 	} else {
 		/**

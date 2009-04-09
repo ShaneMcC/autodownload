@@ -30,6 +30,10 @@
 		table.best td {
 			background-color: #DAFFDA;
 		}
+		
+		table.bad td {
+			background-color: #FFDADA;
+		}
 	';
 	
 	head(sprintf('TV Downloader - %s %dx%02d', $show['name'], $show['season'], $show['episode']), '', $css);
@@ -57,7 +61,9 @@
 		echo 'An error occured getting the search results: ', (string)$search->error['message'], EOL;
 	} else {
 		$items = $search->item;
-		$optimal = GetBestOptimal($items, $show['size'], false, true);
+		echo '[GetBestOptimal]', CRLF;
+		$optimal = GetBestOptimal($items, $show['size'], false, true, $show);
+		echo '[/GetBestOptimal]', CRLF;
 		
 		/*echo '<pre>';
 		print_r($items);
@@ -82,7 +88,7 @@
 			$comments = (int)$item->comments['count'];
 			if ($comments > 0) { $comments .= ' (<a href="'.(string)$item->comments.'">View</a>)'; }
 			
-			$class = 'downloadList' . ($best ? ' best' : '');
+			$class = 'downloadList' . ($best ? ' best' : '') . (!isGoodMatch((string)$item->name, $show) ? ' bad' : '');
 			
 			echo '<table class="'.$class.'" id="nzb_', $id, '">'.CRLF;
 			echo '  <tr>'.CRLF;

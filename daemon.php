@@ -420,10 +420,11 @@
 		// Look at all the shows that aired yesterday
 		foreach (getShows(true, -1, -1, false, $config['autodownload']['source']) as $show) {
 			$info = $show['info'];
+			$first = (((int)$show['season'] == 1 && (int)$show['episode'] == 1) && $config['daemon']['autotv']['allfirst']);
 			// Check if this show is marked as automatic, (and is marked as important if onlyimportant is set true)
 			// Also check that the show hasn't already been downloaded.
 			$important = (($info['important'] && $config['download']['onlyimportant']) || !$config['download']['onlyimportant']);
-			if ($info['automatic'] && $important && (isset($daemon['cli']['autotv-force']) || !hasDownloaded($show['name'], $show['season'], $show['episode']))) {
+			if (($info['automatic'] || $first) && $important && (isset($daemon['cli']['autotv-force']) || !hasDownloaded($show['name'], $show['season'], $show['episode']))) {
 				doEcho('Show: ', $show['name'], CRLF);
 				// Search for this show, and get the optimal match.
 				ob_start();

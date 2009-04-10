@@ -9,6 +9,11 @@
 	// How many seconds should the daemon sleep inbetween loops?
 	// Default is 5
 	$config['daemon']['looptime'] = 5;
+	
+	// Should all 1x01's be downloaded ?
+	// This is ignored if only-important is true.
+	$config['daemon']['autotv']['allfirst'] = true;
+	
 	// Times that the daemon should check for new TV.
 	// This is an array containing "time arrays".
 	// "time arrays" are arrays with keys corresponding to the values of
@@ -72,6 +77,7 @@
 	// The count is increased by 1 every time the daemon loops and an inotify
 	// event was recieved.
 	$config['daemon']['reindex']['inotify_count'] = 100;
+	
 
 	//----------------------------------------------------------------------------
 	// Automatic Downloading settings.

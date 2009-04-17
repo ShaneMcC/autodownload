@@ -61,9 +61,7 @@
 		echo 'An error occured getting the search results: ', (string)$search->error['message'], EOL;
 	} else {
 		$items = $search->item;
-		echo '[GetBestOptimal]', CRLF;
 		$optimal = GetBestOptimal($items, $show['size'], false, true, $show);
-		echo '[/GetBestOptimal]', CRLF;
 		
 		/*echo '<pre>';
 		print_r($items);

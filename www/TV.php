@@ -8,13 +8,13 @@
 	$endtime = $starttime;
 	if (isset($_REQUEST['week'])) {
 		$day = date('d', strtotime('-7 days'));
-		$month = date('M', strtotime('-7 days'));
+		$month = date('m', strtotime('-7 days'));
 		$year = date('Y', strtotime('-7 days'));
 		
 		$starttime = strtotime($month.'/'.$day.'/'.$year);
 	} elseif (isset($_REQUEST['month'])) {
 		$day = '1';
-		$month = date('M', strtotime('today'));
+		$month = date('m', strtotime('today'));
 		$year = date('Y', strtotime('today'));
 		
 		$starttime = strtotime($month.'/'.$day.'/'.$year);

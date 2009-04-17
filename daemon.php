@@ -444,7 +444,7 @@
 					$items = $search->item;
 					doEcho('Items: ');
 					doPrintR($items);
-					$optimal = GetBestOptimal($items, $show['size'], false, true, $show);
+					$optimal = GetBestOptimal($search->xpath('item'), $info['size'], false, true, $show);
 					// If a best item was found
 					if (count(items) > 0 && $optimal != -1) {
 						$best = $items[$optimal];

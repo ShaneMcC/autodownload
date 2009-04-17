@@ -60,8 +60,7 @@
 	} else  if ($search->error['message'] && $search->error['message'] != '') {
 		echo 'An error occured getting the search results: ', (string)$search->error['message'], EOL;
 	} else {
-		$items = $search->item;
-		$optimal = GetBestOptimal($items, $show['size'], false, true, $show);
+		$optimal = GetBestOptimal($search->xpath('item'), $info['size'], false, true, $show);
 		
 		/*echo '<pre>';
 		print_r($items);
@@ -69,7 +68,7 @@
 		echo '</pre>';*/
 		
 		$i = 0;
-		foreach ($items as $item) {
+		foreach ($search->item as $item) {
 			$best = ($optimal == $i);
 			$i++;
 			

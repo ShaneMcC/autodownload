@@ -427,7 +427,7 @@
 		$dev = -1;
 		for ($i = 0; $i != count($matches); $i++) {
 			if (!isGoodMatch((string)$matches[$i]->name, $show)) { continue; }
-			$val = (float)str_replace(',', '', (string)$matches[$i]['sizemb']);
+			$val = (float)str_replace(',', '', (string)$matches[$i]->sizemb);
 			if ($val == $target_optimal) {
 				$result = $i;
 				break;
@@ -443,7 +443,7 @@
 		if ($allownegative === false) {
 			if ($dev < 0) {
 				$result = GetBestOptimal($matches,$optimal,true, false, $show);
-			} else if ($allownegativeifdouble === true && $cdev > ($target_optimal * 2)) {
+			} else if ($allownegativeifdouble === true && $dev > ($target_optimal * 2)) {
 				$currentResult = $result;
 				$possibleResult = GetBestOptimal($matches,$optimal,true, false, $show);
 				

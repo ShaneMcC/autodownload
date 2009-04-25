@@ -448,7 +448,8 @@
 				$possibleResult = GetBestOptimal($matches,$optimal,true, false, $show);
 				
 				$minumum = $target_optimal * 0.8;
-				$val = (float)str_replace(',', '', (string)$matches[$possibleResult]['sizemb']);
+				$val = (float)str_replace(',', '', (string)$matches[$possibleResult]->sizemb);
+				print_r($matches[$possibleResult]);
 				if ($val >= $minumum) {
 					$result = $possibleResult;
 				}

@@ -476,8 +476,8 @@
 		$info['attributes'] = ($info['attributes'] == null || empty($info['attributes'])) ? $config['default']['attributes'] : $info['attributes'];
 		
 		// Make sure automatic and important are booleans
-		$info['automatic'] = (strtolower($info['automatic']) == 'true');
-		$info['important'] = (strtolower($info['important']) == 'true');
+		if ($info['automatic'] !== true && ($info['automatic'] !== false) { $info['automatic'] = (strtolower($info['automatic']) == 'true'); }
+		if ($info['important'] !== true && ($info['important'] !== false) { $info['important'] = (strtolower($info['important']) == 'true'); }
 		
 		// Double the optimal size if using highdef.
 		if ($config['download']['highdef']) {

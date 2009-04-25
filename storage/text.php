@@ -15,8 +15,8 @@
 	include_once(dirname(__FILE__).'/../config.php');
 	
 	// Include the files we use to store data in.
-	include_once(dirname(__FILE__).'/'.$config['storage']['text']['settings']);
-	include_once(dirname(__FILE__).'/'.$config['storage']['text']['got']);
+	@include_once(dirname(__FILE__).'/'.$config['storage']['text']['settings']);
+	@include_once(dirname(__FILE__).'/'.$config['storage']['text']['got']);
 	
 	/**
 	 * Get information about the given show from the database.
@@ -99,8 +99,12 @@
 			return;
 		}
 		
-		$file = file_get_contents(dirname(__FILE__).'/'.$config['storage']['text']['got']);
-		$lines = explode("\n", $file);
+		if (file_exists(dirname(__FILE__).'/'.$config['storage']['text']['got'])) {
+			$file = file_get_contents(dirname(__FILE__).'/'.$config['storage']['text']['got']);
+			$lines = explode("\n", $file);
+		} else {
+			$lines = array("<?php", "?>");
+		}
 		
 		if (isset($Got[$show][$season][$episode]['time'])) { return; }
 		

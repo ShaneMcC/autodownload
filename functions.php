@@ -580,4 +580,11 @@
 		 */
 		function doReport($info) { }
 	}
+	
+	// Fix any _REQUEST items.
+	if (isset($_REQUEST)) {
+		foreach ($_REQUEST as $key => $value) {
+			$_REQUEST[$key] = unslash($_REQUEST[$key]);
+		}
+	}
 ?>

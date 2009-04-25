@@ -27,7 +27,7 @@
 		// Hellanzb returns 0 even if the connection failed.
 		// stupid poc.
 		if ($result['status']) {
-			if (stristr(implode(" ", $output), "Unable to connect to XMLRPC server")) {
+			if (stristr(implode(" ", $output), "Unable to connect to XMLRPC server") !== FALSE) {
 				$result['status'] = false;
 			}
 		}

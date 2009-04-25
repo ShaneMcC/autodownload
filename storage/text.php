@@ -15,8 +15,8 @@
 	include_once(dirname(__FILE__).'/../config.php');
 	
 	// Include the files we use to store data in.
-	include_once(dirname(__FILE__).'/'.$config['storage']['text']['settings']);
-	include_once(dirname(__FILE__).'/'.$config['storage']['text']['got']);
+	require_once(dirname(__FILE__).'/'.$config['storage']['text']['settings']);
+	require_once(dirname(__FILE__).'/'.$config['storage']['text']['got']);
 	
 	/**
 	 * Get information about the given show from the database.
@@ -28,7 +28,7 @@
 		global $Auto, $config, $Search, $Attributes, $important, $Alias;
 		
 		$name = (string)$showname;
-		if (isset($Alias['$name'])) { $name = $Alias['$name']; }
+		if (isset($Alias[$name])) { $name = $Alias[$name]; }
 		
 		$result = array();
 		$result['request'] = (string)$showname;

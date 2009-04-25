@@ -162,6 +162,13 @@
 	// Try to download shows in high def? (This doubles the optimal download size)
 	$config['download']['highdef'] = false;
 	
+	// How many times larger than the optimal is considered "too high"?
+	// (If the value is higher than this, then a potential smaller result will be
+	// looked for instead).
+	$config['download']['optimal']['toohigh'] = 2;
+	// How many times smaller is too low?
+	$config['download']['optimal']['toolow'] = 0.8;
+	
 	//----------------------------------------------------------------------------
 	// Hellanzb details
 	//----------------------------------------------------------------------------

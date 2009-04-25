@@ -409,18 +409,18 @@
 	 *                       one in the list is chosen. If this is false and no
 	 *                       optimal matches are found, then this is assumed to
 	 *                       be true.
-	 * @param $allownegativeifdouble (Default = false) If $allownegative is false
-	 *                               and the best possible match is more than
-	 *                               double the optimal value, should we look for
-	 *                               a better negative match? The negative match
-	 *                               will only be considered better if it is
-	 *                               over 80% of the optimal.
+	 * @param $allownegativeiftoohigh (Default = false) If $allownegative is false
+	 *                                and the best possible match is 'toohigh'
+	 *                                times the optimal size, should we look for
+	 *                                a better negative match? The negative match
+	 *                                will only be considered better if it is
+	 *                                more than 'toolow' of the optimal.
 	 * @param $show If this parameter is given, isGoodMatch will be used to ignore
 	 *              bad shows.
 	 * @return The index of the best match, or -1 if none was found.
 	 */
-	function GetBestOptimal($matches,$optimal,$allownegative = false,$allownegativeifdouble = false, $show = array()) {
-		// global $config;
+	function GetBestOptimal($matches,$optimal,$allownegative = false,$allownegativeiftoohigh = false, $show = array()) {
+		global $config;
 		// $target_optimal = ($config['download']['highdef']) ? $optimal * 2 : $optimal;
 		$target_optimal = $optimal;
 		$result = -1;
@@ -440,14 +440,19 @@
 				}
 			}
 		}
+		
+		$toohigh = $config['download']['optimal']['toohigh'];
+		$toolow = $config['download']['optimal']['toolow'];
+		
+		
 		if ($allownegative === false) {
 			if ($dev < 0) {
 				$result = GetBestOptimal($matches,$optimal,true, false, $show);
-			} else if ($allownegativeifdouble === true && $dev > ($target_optimal * 2)) {
+			} else if ($allownegativeiftoohigh === true && $dev > ($target_optimal * $toohigh)) {
 				$currentResult = $result;
 				$possibleResult = GetBestOptimal($matches,$optimal,true, false, $show);
 				
-				$minumum = $target_optimal * 0.8;
+				$minumum = $target_optimal * $toolow;
 				$val = (float)str_replace(',', '', (string)$matches[$possibleResult]->sizemb);
 				print_r($matches[$possibleResult]);
 				if ($val >= $minumum) {

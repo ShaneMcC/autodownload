@@ -9,7 +9,7 @@
 	include_once(dirname(__FILE__).'/../../functions.php');
 
 	$urls = array();
-
+	$extra = isset($_REQUEST['extra']) ? $_REQUEST['extra'] : '';
 	$shows = array();
 	$cacheInfo = array();
 	$sources = directoryToArray($config['tv']['filebase'], false, false, false);

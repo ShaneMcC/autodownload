@@ -37,9 +37,12 @@
 				$description = (string)$item->description;
 				
 				preg_match('@^- (.*) \(([0-9]+)x([0-9]+)\)$@U', $item->title, $matches);
-			
+				$datestring = date('j-n-Y', $time);
+				if (isset($_REQUEST['extra']) && !empty($_REQUEST['extra']) && $_REQUEST['extra'] != date('n-Y', $time)) {
+					continue;
+				}
 				echo "\t<show>\n";
-				echo "\t\t<date time=\"".$time."\">".$date."</date>\n";
+				echo "\t\t<date time=\"".$time."\">".$datestring."</date>\n";
 				echo "\t\t<name>".htmlspecialchars($matches[1], ENT_QUOTES, 'UTF-8')."</name>\n";
 				echo "\t\t<title>".htmlspecialchars($description, ENT_QUOTES, 'UTF-8')."</title>\n";
 				echo "\t\t<season>".$matches[2]."</season>\n";

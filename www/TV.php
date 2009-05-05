@@ -4,7 +4,9 @@
 
 	head('TV Downloader');
 	
-	$starttime = strtotime('yesterday');
+	$diff = strtotime('-0 days') - strtotime('today');
+	
+	$starttime = isset($_REQUEST['day']) ? strtotime($_REQUEST['day']) - $diff : strtotime('yesterday');
 	$endtime = $starttime;
 	if (isset($_REQUEST['week'])) {
 		$day = date('d', strtotime('-7 days'));
@@ -46,7 +48,11 @@
 			echo ' [<strong>Got</strong>]';
 		}
 		
-		if (isset($_REQUEST['extrainfo'])) { echo ' /* Title: "'.$show['title'].'" */'; }
+		if (isset($_REQUEST['showsource'])) { 
+			echo ' {', implode(', ', $show['sources']), '}';
+		}
+		
+		if (isset($_REQUEST['showtitle'])) { echo ' /* Title: "'.$show['title'].'" */'; }
 		
 		echo EOL;
 	}

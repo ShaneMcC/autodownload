@@ -146,6 +146,8 @@
 	 *         that airs between the given times.
 	 */
 	function getShows($getInfo = false, $starttime = -1, $endtime = -1, $forcereload = false, $source = '') {
+		global $config;
+		
 		$starttime = ($starttime == -1) ? strtotime("yesterday") : $starttime;
 		$endtime = ($endtime == -1) ? strtotime("yesterday") : $endtime;
 		
@@ -162,6 +164,14 @@
 				$thisShow['season'] = (int)$show->season;
 				$thisShow['episode'] = (int)$show->episode;
 				$thisShow['title'] = (string)$show->title;
+				if ($show->source) {
+					$thisShow['sources'] = array();
+					foreach ($show->source as $source) {
+						$thisShow['sources'][] = (string)$source;
+					}
+				} else {
+					$thisShow['sources'] = (empty($source) || !validSource($source)) ? $config['tv']['default_source'] : $source;
+				}
 				if ($getInfo) {
 					$thisShow['info'] = getShowInfo((string)$show->name);
 				}

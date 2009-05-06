@@ -84,6 +84,14 @@
 	//----------------------------------------------------------------------------
 	// Source to use for automatic downloads. ('' for default);
 	$config['autodownload']['source'] = '';
+	
+	//----------------------------------------------------------------------------
+	// Series Downloading settings.
+	//----------------------------------------------------------------------------
+	// Sleep after how many searches/downloads?
+	$config['seriesdownload']['sleepcount'] = 5;
+	// Sleep for how long?
+	$config['seriesdownload']['sleeptime'] = 60;
 
 	//----------------------------------------------------------------------------
 	// How should we search newzbin?

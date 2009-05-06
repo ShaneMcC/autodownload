@@ -4,39 +4,7 @@
 	
 	$show = unserialize($_REQUEST['info']);
 	
-	$css = '
-		table.downloadList {
-			border-collapse: collapse;
-			
-			width: 699px;
-		}
-		
-		table.downloadList td, table.downloadList th {
-			border: 1px solid black;
-			padding: 1px 5px;
-		}
-		
-		table.downloadList th {
-			background-color: #AAA;
-			text-align: right;
-			width: 75px;
-		}
-		
-		table.downloadList td {
-			text-align: left;
-			width: 158px;
-		}
-		
-		table.best td {
-			background-color: #DAFFDA;
-		}
-		
-		table.bad td {
-			background-color: #FFDADA;
-		}
-	';
-	
-	head(sprintf('TV Downloader - %s %dx%02d', $show['name'], $show['season'], $show['episode']), '', $css);
+	head(sprintf('TV Downloader - %s %dx%02d', $show['name'], $show['season'], $show['episode']), '', getCSS(true, false));
 	
 	$info = (is_array($show['info'])) ? $show['info'] : getShowInfo($show['name']);
 	

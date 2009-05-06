@@ -50,6 +50,92 @@
 	}
 	
 	/**
+	 * Get generic CSS.
+	 *
+	 * @param $downloadListTable (Default = false) Include CSS for the
+	 *                           downloadList Table
+	 * @param $formRow (Default = false) Include CSS for forms
+	 * @return The css requested.
+	 */
+	function getCSS($downloadListTable = false, $formRow = false) {
+		$css = '';
+		
+		if ($downloadListTable) {
+			$css .= '
+				table.downloadList {
+					border-collapse: collapse;
+					width: 699px;
+				}
+				
+				table.downloadList td, table.downloadList th {
+					border: 1px solid black;
+					padding: 1px 5px;
+				}
+				
+				table.downloadList th {
+					background-color: #AAA;
+					text-align: right;
+					width: 75px;
+				}
+				
+				table.downloadList td {
+					text-align: left;
+					width: 158px;
+				}
+				
+				table.best td {
+					background-color: #DAFFDA;
+				}
+				
+				table.bad td {
+					background-color: #FFDADA;
+				}
+			';
+		}
+			
+		if ($formRow) {
+			$css .= '
+				div.formrow {
+					padding-top: 3px;
+				}
+				
+				div.formrow span.labelmed {
+					float: left;
+					clear: left;
+					width: 250px;
+					text-align: right;
+					padding-top: 5px;
+				}
+				
+				div.formrow span.inputreg {
+					padding-top: 5px;
+					margin-left: 10px;
+					text-align: center;
+					float: left;
+					width: 180px;
+				}
+				
+				div.center {
+					margin-left: auto;
+					margin-right: auto;
+					text-align: center;
+					display: table;
+				}
+				
+				input {
+					width: 170px;
+					border: 1px solid black;
+					font-size: 10px;
+					padding: 3px;
+					margin-bottom: 5px;
+				}
+			';
+		}
+			
+		return $css;
+	}
+	
+	/**
 	 * Remove slashes added by magic quotes if enabled.
 	 * If magic quotes is not enabled, $text will be returned.
 	 *
@@ -472,6 +558,204 @@
 		}
 		
 		return $result;
+	}
+	
+	/**
+	 * Search tvrage for shows matching the given search term.
+	 *
+	 * @param $search Term to search for.
+	 * @return Array representing all the shows found.
+	 */
+	function searchSeriesInfo($search) {
+		$shows = array();
+		
+		$page = file_get_contents('http://services.tvrage.com/feeds/full_search.php?show='.$search);
+		if ($page !== false) {
+			$showsxml = simplexml_load_string($page);
+			foreach ($showsxml->show as $showxml) {
+				$show = array();
+				$show['id'] = (int)$showxml->showid;
+				$show['name'] = (string)$showxml->name;
+				$show['link'] = (string)$showxml->link;
+				$show['country'] = (string)$showxml->country;
+				$show['started'] = (string)$showxml->started;
+				$show['ended'] = (string)$showxml->ended;
+				$show['seasons'] = (int)$showxml->seasons;
+				$show['status'] = (string)$showxml->status;
+				$show['runtime'] = (string)$showxml->runtime;
+				$show['classification'] = (string)$showxml->classification;
+				$show['genres'] = array();
+				foreach ($showxml->genres->genre as $genre) {
+					$show['genres'][] = (string)$genre;
+				}
+				$show['network'] = array();
+				$i = 0;
+				foreach ($showxml->network as $network) {
+					$show['network'][(string)$network['country']] = (string)$network;
+				}
+				$show['airtime'] = (string)$showxml->airtime;
+				$show['airday'] = (string)$showxml->airday;
+				$show['aka'] = array();
+				if ($showxml->akas) {
+					foreach ($showxml->akas->aka as $aka) {
+						$show['aka'][(string)$aka['country']] = (string)$aka;
+					}
+				}
+				$shows[] = $show;
+			}
+		}
+		
+		return $shows;
+	}
+	
+	/**
+	 * Get show info from tvrage.
+	 *
+	 * @param $showID Show to get info for.
+	 * @return Array representing the shows info.
+	 */
+	function getSeriesInfo($showID) {
+		$show = array();
+		
+		$page = file_get_contents('http://services.tvrage.com/feeds/full_show_info.php?sid='.$showID);
+		if ($page !== false && !empty($page)) {
+			$showxml = simplexml_load_string($page);
+			
+			$show['name'] = (string)$showxml->name;
+			$show['seasons'] = (int)$showxml->totalseasons;
+			$show['id'] = (int)$showxml->showid;
+			$show['link'] = (string)$showxml->showlink;
+			$show['started'] = (string)$showxml->started;
+			$show['ended'] = (string)$showxml->ended;
+			$show['country'] = (string)$showxml->origin_country;
+			$show['status'] = (string)$showxml->status;
+			$show['classification'] = (string)$showxml->classification;
+			$show['genres'] = array();
+			foreach ($showxml->genres->genre as $genre) {
+				$show['genres'][] = (string)$genre;
+			}
+			$show['runtime'] = (string)$showxml->runtime;
+			$show['network'] = array();
+			$i = 0;
+			foreach ($showxml->network as $network) {
+				$show['network'][(string)$network['country']] = (string)$network;
+			}
+			$show['airtime'] = (string)$showxml->airtime;
+			$show['airday'] = (string)$showxml->airday;
+			$show['timezone'] = (string)$showxml->timezone;
+			$show['aka'] = array();
+			if ($showxml->akas) {
+				foreach ($showxml->akas->aka as $aka) {
+					$show['aka'][(string)$aka['country']] = (string)$aka;
+				}
+			}
+			
+			$i = 0;
+			$show['episodes'] = array();
+			foreach ($showxml->Episodelist->Season as $seasoninfo) {
+				$season = (int)$seasoninfo['no'];
+				$show['episodes'][$season] = array();
+				foreach ($seasoninfo->episode as $episodeinfo) {
+					$i++;
+					$episode = array();
+					$epnum = (int)$episodeinfo->seasonnum;
+					$episode['totalepnum'] = (int)$episodeinfo->epnum;
+					$episode['seasonepnum'] = (int)$epnum;
+					$episode['prodnum'] = (string)$episodeinfo->prodnum;
+					$episode['airdate'] = (string)$episodeinfo->airdate;
+					$episode['link'] = (string)$episodeinfo->link;
+					$episode['title'] = (string)$episodeinfo->title;
+					$episode['screencap'] = ($episodeinfo->screencap) ? (string)$episodeinfo->screencap : '';
+					
+					$show['episodes'][$season][$epnum] = $episode;
+				}
+			}
+			$show['episodecount'] = $i;
+		}
+		
+		return $show;
+	}
+	
+	/**
+	 * Display a table showing the series info.
+	 *
+	 * @param $series Series to show info for.
+	 */
+	function displaySeriesInfo($series, $class = 'downloadlist', $actions = '') {
+		echo '<table class="'.$class.'" id="show_', $series['id'], '">', CRLF;
+		echo '  <tr>', CRLF;
+		echo '    <th>Name</th>', CRLF;
+		echo '    <td colspan=3>', $series['name'],'</td>', CRLF;
+		echo '    <th>Runtime</th>', CRLF;
+		echo '    <td>', $series['runtime'],' minutes</td>', CRLF;
+		echo '  </tr>', CRLF;
+		
+		echo '  <tr>', CRLF;
+		echo '    <th>Genres</th>', CRLF;
+		echo '    <td colspan=3>', implode($series['genres'], ', '),'</td>', CRLF;
+		echo '    <th>Seasons</th>', CRLF;
+		echo '    <td>', $series['seasons'],'</td>', CRLF;
+		echo '  </tr>', CRLF;
+		
+		echo '  <tr>', CRLF;
+		echo '    <th>Started</th>', CRLF;
+		echo '    <td>', $series['started'],'</td>', CRLF;
+		echo '    <th>Ended</th>', CRLF;
+		echo '    <td>', $series['ended'],'</td>', CRLF;
+		echo '    <th>Status</th>', CRLF;
+		echo '    <td>', $series['status'],'</td>', CRLF;
+		echo '  </tr>', CRLF;
+		
+		echo '  <tr>', CRLF;
+		echo '    <th>Air Time</th>', CRLF;
+		$airtime = $series['airday'].' at '.$series['airtime'];
+		if (isset($series['timezone'])) { $airtime .= ' ('.$series['timezone'].')'; }
+		echo '    <td colspan=3>', $airtime,'</td>', CRLF;
+		echo '    <th>Network</th>', CRLF;
+		echo '    <td>', $series['network'][$series['country']],'</td>', CRLF;
+		echo '  </tr>', CRLF;
+		
+		echo '  <tr>', CRLF;
+		echo '    <th>Classification</th>', CRLF;
+		echo '    <td colspan=3>', $series['classification'],'</td>', CRLF;
+		echo '    <th>Link</th>', CRLF;
+		echo '    <td colspan=2><a href="', $series['link'],'">More Information</a></td>', CRLF;
+		echo '  </tr>', CRLF;
+		
+		if (!empty($actions)) {
+			echo '  <tr>', CRLF;
+			echo '    <th>Actions</th>', CRLF;
+			echo '    <td colspan=5>', $actions, '</td>', CRLF;
+			echo '  </tr>', CRLF;
+		}
+		echo '</table>', CRLF;
+		echo '<br>'.CRLF;
+	}
+	
+	/**
+	 * Sleep for the given length of time, and draw a progress bar to show this.
+	 *
+	 * @param $length Lenght of time to sleep
+	 * @param $resolution (Default = 1) How many seconds per character displayed
+	 * @param $reason (Default = '') Reason for sleeping
+	 */
+	function sleepProgress($length, $resolution = 1, $reason = '') {
+		echo '<em>Sleeping (for ', $length, ' seconds)', (!empty($reason) ? ' '.$reason : ''), '....</em>', CRLF;
+		echo '|';
+		for ($i = 0; $i < $length; $i += $resolution) { echo '-'; }
+		echo '|'.CRLF;
+		
+		// Draw the progress bar
+		echo ' ';
+		for ($i = 0; $i < $length; $i += $resolution) {
+			echo '#';
+			flush();
+			sleep($resolution);
+		}
+		echo CRLF;
+
+		echo '<strong>Done!</strong>', EOL, EOL;
+		flush();
 	}
 	
 	/**

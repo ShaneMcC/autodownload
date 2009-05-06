@@ -82,23 +82,8 @@
 
 		if ($querynumber >= $querysleepcount) {
 			echo CRLF.'---------------------------------------------------------'.CRLF;
-			echo 'Sleeping (for '.$querysleeptime.' seconds) to reduce load on newzbin server.. '.CRLF;
-			// Show the size of the progress bar
-			echo '|';
-			for ($sleepcount = 0; $sleepcount < $querysleeptime; $sleepcount++) { echo '-'; }
-			echo '|'.CRLF;
-			
-			// Draw the progress bar
-			echo ' ';
-			for ($sleepcount = 0; $sleepcount < $querysleeptime; $sleepcount++) {
-				echo '#';
-				flush();
-				sleep(1);
-			}
-			echo CRLF;
-			
+			sleepProgress($config['seriesdownload']['sleeptime'], 1, 'to reduce load on newzbin server');
 			$querynumber = 0;
-			echo 'done!'.CRLF;
 			echo '---------------------------------------------------------'.CRLF.CRLF;
 		}
 		flush();

@@ -25,7 +25,7 @@
 	 * @return Array containing information from the database for the given show.
 	 */
 	function getShowInfo($showname) {
-		global $Auto, $config, $Search, $Attributes, $important, $Alias;
+		global $Auto, $config, $Search, $Attributes, $important, $Alias, $Sources;
 		
 		$name = (string)$showname;
 		if (isset($Alias[$name])) { $name = $Alias[$name]; }
@@ -36,6 +36,7 @@
 		$result['automatic'] = isset($Auto[$name]);
 		$result['searchstring'] = (isset($Search[$name])) ? $Search[$name] : '' ;
 		$result['dirname'] = (isset($Auto[$name])) ? $Auto[$name] : '' ;
+		$result['sources'] = (isset($Sources[$name])) ? $Sources[$name] : '' ;
 		$result['attributes'] = (isset($Attributes[$name])) ? $Attributes[$name] : '' ;
 		$result['important'] = isset($important[$name]);
 		$result['size'] = (isset($optimalsize[$name])) ? $optimalsize[$name] : '400';

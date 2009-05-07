@@ -9,6 +9,7 @@ CREATE TABLE `shows` (
   `important` enum('true','false') NOT NULL default 'false',
   `size` int(11) NOT NULL default '400',
   `attributes` text,
+  `sources` text,
   PRIMARY KEY  (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
 

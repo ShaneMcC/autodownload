@@ -50,15 +50,16 @@
 		$result['searchstring'] = '';
 		$result['dirname'] = '';
 		$result['attributes'] = '';
+		$result['sources'] = '';
 		$result['important'] = false;
 		$result['size'] = '400';
 		
-		if ($stmt = $mysqli->prepare('SELECT shows.name,shows.automatic,shows.searchstring,shows.dirname,shows.important,shows.size,shows.attributes FROM shows, aliases WHERE (aliases.show = shows.name AND aliases.alias = ?) OR (shows.name = ?);')) {
+		if ($stmt = $mysqli->prepare('SELECT shows.name,shows.automatic,shows.searchstring,shows.dirname,shows.important,shows.size,shows.attributes,shows.sources FROM shows, aliases WHERE (aliases.show = shows.name AND aliases.alias = ?) OR (shows.name = ?);')) {
 			$stmt->bind_param('ss', $result['name'], $result['name']);
 			$stmt->execute();
 			$stmt->store_result();
 			if ($stmt->num_rows > 0) {
-				$stmt->bind_result($result['name'], $result['automatic'], $result['searchstring'], $result['dirname'], $result['important'], $result['size'], $result['attributes']);
+				$stmt->bind_result($result['name'], $result['automatic'], $result['searchstring'], $result['dirname'], $result['important'], $result['size'], $result['attributes'], $result['sources']);
 				$stmt->fetch();
 			}
 			$stmt->free_result();

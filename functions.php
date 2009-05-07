@@ -326,6 +326,35 @@
 	}
 	
 	/**
+	 * Check if the given show came from a good source.
+	 *
+	 * @param $show Show from getShows.
+	 * @return true if at least one of the sources of this show is considered
+	 *         good, or none of them are considered bad.
+	 */
+	function goodSource($show) {
+		$info = ($show['info'] == null || empty($show['info'])) ? getShowInfo($show['name']) : $show['info'];
+		$info_sources = explode(' ', strtolower($info['sources']));
+		$sources = $show['sources'];
+		
+		// Look for a good source
+		foreach ($sources as $source) {
+			if (in_array(strtolower($source), $info_sources)) {
+				return true;
+			}
+		}
+		
+		// Look for a bad source
+		foreach ($sources as $source) {
+			if (in_array(strtolower('!'.$source), $info_sources)) {
+				return false;
+			}
+		}
+		
+		return true;
+	}
+	
+	/**
 	 * Check if the given search result is a good match for the given show?
 	 * (Sometimes generic named shows "life" "house" "heroes" etc can return
 	 * results for other shows that are similar, this is used to detect the
@@ -774,6 +803,7 @@
 		$info['searchstring'] = ($info['searchstring'] == null || empty($info['searchstring'])) ? $config['default']['searchstring'] : $info['searchstring'];
 		$info['dirname'] = ($info['dirname'] == null || empty($info['dirname'])) ? $config['default']['dirname'] : $info['dirname'];
 		$info['attributes'] = ($info['attributes'] == null || empty($info['attributes'])) ? $config['default']['attributes'] : $info['attributes'];
+		$info['sources'] = ($info['sources'] == null || empty($info['sources'])) ? $config['default']['sources'] : $info['sources'];
 		
 		// Make sure automatic and important are booleans
 		if ($info['automatic'] !== true && $info['automatic'] !== false) { $info['automatic'] = (strtolower($info['automatic']) == 'true'); }

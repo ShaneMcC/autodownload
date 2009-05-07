@@ -52,6 +52,8 @@
 			echo ' {', implode(', ', $show['sources']), '}';
 		}
 		
+		echo goodSource($show) ? ' good ' : ' bad ' ;
+		
 		if (isset($_REQUEST['showtitle'])) { echo ' /* Title: "'.$show['title'].'" */'; }
 		
 		echo EOL;

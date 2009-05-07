@@ -162,6 +162,8 @@
 	$config['default']['searchstring'] = '{series} {season}x{episode}';
 	// What attributes should we use when searching?
 	$config['default']['attributes'] = 'Attr:Language=English';
+	// What should be considered the default sources if none are specified?
+	$config['default']['sources'] = '!tvrage_britain';
 	
 	//----------------------------------------------------------------------------
 	// Download Modifiers

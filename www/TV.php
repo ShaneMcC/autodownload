@@ -37,11 +37,11 @@
 		
 		echo 'Found Show: ';
 		echo '<a href="GetTV.php?info=', urlencode(serialize($show)), '">';
-		if ($show['info']['automatic']) { echo '<strong>'; }
+		if ($show['info']['automatic'] && goodSource($show)) { echo '<strong>'; }
 		if ($show['info']['important']) { echo '<em>'; }
 		printf('%s %dx%02d', $show['name'], $show['season'], $show['episode']);
 		if ($show['info']['important']) { echo '</em>'; }
-		if ($show['info']['automatic']) { echo '</strong>'; }
+		if ($show['info']['automatic'] && goodSource($show)) { echo '</strong>'; }
 		echo '</a>';
 		
 		if (hasDownloaded($show['name'], $show['season'], $show['episode']) > 0) {
@@ -51,8 +51,6 @@
 		if (!isset($_REQUEST['noshowsource'])) { 
 			echo ' {', implode(', ', $show['sources']), '}';
 		}
-		
-		echo goodSource($show) ? ' good ' : ' bad ' ;
 		
 		if (isset($_REQUEST['showtitle'])) { echo ' /* Title: "'.$show['title'].'" */'; }
 		

@@ -48,7 +48,7 @@
 			echo ' [<strong>Got</strong>]';
 		}
 		
-		if (isset($_REQUEST['showsource'])) { 
+		if (!isset($_REQUEST['noshowsource'])) { 
 			echo ' {', implode(', ', $show['sources']), '}';
 		}
 		

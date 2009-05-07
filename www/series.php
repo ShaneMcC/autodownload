@@ -96,7 +96,7 @@
 		echo '</ul>', CRLF;
 		
 		$info = getShowInfo($showinfo['name']);
-		$info['size'] = (($showinfo['runtime'] * (2/3)) * 100);
+		$info['size'] = (($showinfo['runtime'] * (2/3)) * 10);
 		$cleanName = cleanName($info['name'], true);
 		
 		foreach ($showinfo['episodes'] as $season => $episodes) {
@@ -113,7 +113,10 @@
 				$show['sources'] = 'tvrage_search';
 				$show['info'] = $info;
 				
-				echo '<table class="episode">', CRLF;
+				$class = 'episode';
+				$class .= (strtotime($episode['airdate']) > time()) ? ' bad' : '';
+				
+				echo '<table class="', $class, '">', CRLF;
 				echo '  <tr>', CRLF;
 				echo '    <td rowspan=4 class="image">';
 				if ($episode['screencap']) {
@@ -167,7 +170,7 @@
 		$showinfo = getSeriesInfo($showid);
 		
 		$info = getShowInfo($showinfo['name']);
-		$info['size'] = (($showinfo['runtime'] * (2/3)) * 100);
+		$info['size'] = (($showinfo['runtime'] * (2/3)) * 10);
 		$cleanName = cleanName($info['name'], true);
 		
 		$count = 0;
@@ -183,7 +186,7 @@
 				$show['sources'] = 'tvrage_search';
 				$show['info'] = $info;
 		
-				if (hasDownloaded($show['name'], $show['season'], $show['episode'], $show['title']) && $_REQUEST['download'] != "all") {
+				if (strtotime($episode['airdate']) > time() || (hasDownloaded($show['name'], $show['season'], $show['episode'], $show['title']) && $_REQUEST['download'] != "all")) {
 					echo sprintf('Skipping: %s %dx%02d -> %s', $cleanName, $season, $episode['seasonepnum'], $show['title']), CRLF;
 					flush();
 					continue;
@@ -194,7 +197,7 @@
 					sleepProgress($config['seriesdownload']['sleeptime'], 1, 'to reduce load on newzbin server');
 				}
 				
-				echo sprintf('Trying: %s %dx%02d -> %s', $cleanName, $season, $episode['seasonepnum'], $show['title']), CRLF;
+				echo sprintf('Trying: %s %dx%02d -> %s [%s]', $cleanName, $season, $episode['seasonepnum'], $show['title'], getSearchString($show)), CRLF;
 				flush();
 		
 				// Search for this show, and get the optimal match.
@@ -215,7 +218,7 @@
 					$items = $search->item;
 					$optimal = GetBestOptimal($search->xpath('item'), $info['size'], false, true, $show);
 					// If a best item was found
-					if (count(items) > 0 && $optimal != -1) {
+					if (count($items) > 0 && $optimal != -1) {
 						$best = $items[$optimal];
 						$bestid = (int)$best->nzbid;
 						echo "\t\t", 'Found Newzbin ID: ', $bestid, '...';
@@ -231,7 +234,7 @@
 							echo ' Failed.', CRLF;
 						}
 					} else {
-						echo "\t\t", '<strong><em>No search results found.</em></strong>', CRLF;
+						echo "\t\t", '<strong><em>No search results found. (Items: ', count($items), ', Optimal: ', $optimal, ')</em></strong>', CRLF;
 					}
 				}
 				flush();

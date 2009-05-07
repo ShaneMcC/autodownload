@@ -43,6 +43,7 @@
 	// are an array which shows where each key-part of the match is.
 	$config['daemon']['reindex']['dirpatterns'] = array('/^(.*)[_ ]-[_ ]([0-9]+)[Xx]([0-9\-]+)[_ ]-[_ ]([^_]+)(?:_.*)?$/U' => array('name' => 1, 'season' => 2, 'episode' => 3, 'title' => 4),
 	                                                    '/^(.*)[_ ]-[_ ]([0-9]+)[Xx]([0-9\-]+).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
+	                                                    '/^(.*)[_ ]-[_ ]([0-9]+).*$/U' => array('name' => 1, 'episode' => 1),
 	                                                    '/^selected_files_[0-9]+-[0-9]+$/U' => array('usefilepattern' => true),
 	                                                   );
 	// Patterns used to match file names when using inotify

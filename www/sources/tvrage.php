@@ -8,12 +8,15 @@
 	//----------------------------------------------------------------------------
 	include_once(dirname(__FILE__).'/../../config.php');
 
-	$savefile = __FILE__.'.cache';
+	if (!isset($cache_special)) { $cache_special = ''; }
+	if (!isset($special)) { $special = ''; }
+
+	$savefile = __FILE__.'.cache'.$cache_special;
 	$cachetime = $config['tv']['cachetime'];
 	
 	if (isset($_REQUEST['forcereload']) || !file_exists($savefile) || !is_file($savefile) || filemtime($savefile) < time()-$cachetime) {
 		$cache = 'No';
-		$contents = file_get_contents('http://www.tvrage.com/myweekrss.php');
+		$contents = file_get_contents('http://www.tvrage.com/myweekrss.php'.$special);
 		@file_put_contents($savefile, $contents);
 	} else {
 		$cache = 'Yes ('.time().'/'.date('r', time()).') ['.$savefile.']';

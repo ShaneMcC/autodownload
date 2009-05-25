@@ -310,8 +310,11 @@
 			if (preg_match($pattern, $name, $matches)) {
 				if (function_exists('doPrintR')) { doPrintR($matches); }
 				$result['pattern'] = $pattern;
+				
+				
+				
 				$result['name'] = isset($info['name']) ? $matches[$info['name']] : 'Unknown';
-				$result['season'] = isset($info['season']) ? $matches[$info['season']] : '00';
+				$result['season'] = isset($info['season']) ? $matches[$info['season']] : (isset($info['force_season']) ? $info['force_season'] : '00');
 				$result['episode'] = isset($info['episode']) ? $matches[$info['episode']] : '00';
 				$result['title'] = isset($info['title']) ? $matches[$info['title']] : 'Episode '.$result['season'].'x'.$result['episode'];
 				$result['usefilepattern'] = isset($info['usefilepattern']) ? $info['usefilepattern'] : $config['daemon']['reindex']['usefilepatterns'];
@@ -327,6 +330,9 @@
 	
 	/**
 	 * Check if the given show came from a good source.
+	 * This first checks for a good source, and returns true if found.
+	 * then it checks for a bad source and returns false if found.
+	 * finally, if neither a good nor bad source is found, then it returns true.
 	 *
 	 * @param $show Show from getShows.
 	 * @return true if at least one of the sources of this show is considered
@@ -351,6 +357,7 @@
 			}
 		}
 		
+		// No specifically good or bad sources found.
 		return true;
 	}
 	

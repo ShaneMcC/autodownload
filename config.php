@@ -38,12 +38,16 @@
 	// Base directory to reindex from
 	$config['daemon']['reindex']['downloaddir'] = '/media/data/nzb/';
 	
+	// When reindexing, ignore episodes that end up as 0x00.
+	// 0x00 Usually means that the parsing of the title went wrong.
+	$config['daemon']['reindex']['ignore0x00'] = true;
+	
 	// Patterns used to match directory names.
 	// Array containing key/value pairs. Keys are the patterns to match, values
 	// are an array which shows where each key-part of the match is.
 	$config['daemon']['reindex']['dirpatterns'] = array('/^(.*)[_ ]-[_ ]([0-9]+)[Xx]([0-9\-]+)[_ ]-[_ ]([^_]+)(?:_.*)?$/U' => array('name' => 1, 'season' => 2, 'episode' => 3, 'title' => 4),
 	                                                    '/^(.*)[_ ]-[_ ]([0-9]+)[Xx]([0-9\-]+).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
-	                                                    '/^(.*)[_ ]-[_ ]([0-9]+).*$/U' => array('name' => 1, 'episode' => 1),
+	                                                    '/^(.*)[_ ]-[_ ]([0-9]+)(?:[^0-9]+.*)?$/U' => array('name' => 1, 'episode' => 2, 'force_season' => '1'),
 	                                                    '/^selected_files_[0-9]+-[0-9]+$/U' => array('usefilepattern' => true),
 	                                                   );
 	// Patterns used to match file names when using inotify
@@ -79,7 +83,15 @@
 	// event was recieved.
 	$config['daemon']['reindex']['inotify_count'] = 100;
 	
-
+	// Should the 'Unwatched' folder actually only contain symlinks rather than
+	// actual files? (Actual files will be put into the 'Watched' folder, inotify
+	// will delete symlinks rather than moving files.)
+	//
+	// This is useful if you want to keep it obvious which files are unwatched,
+	// but want to allow other machines to access everything without marking them
+	// as watched.
+	$config['daemon']['reindex']['symlinkwatched'] = true;
+	
 	//----------------------------------------------------------------------------
 	// Automatic Downloading settings.
 	//----------------------------------------------------------------------------

@@ -265,36 +265,41 @@
 					if ($daemon['inotify']['files'][$event['wd']]['access_count'] > $config['daemon']['reindex']['inotify_count']) {
 						doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is being marked as watched.', CRLF);
 						
-						// Get the source of this file.
-						$source = preg_replace('@//@si', '/', $watchdir.'/'.$daemon['inotify']['files'][$event['wd']]['file']);
-						
-						// Check if it matches any of the patterns.
-						$patterns = $config['daemon']['reindex']['filepatterns'];
-						
-						$info = getEpisodeInfo($config['daemon']['reindex']['filepatterns'], $daemon['inotify']['files'][$event['wd']]['file']);
-						if ($info != null) {
-							$filename = explode('.', $daemon['inotify']['files'][$event['wd']]['file']);
-							$fileext = strtolower(array_pop($filename));
+						if (is_link($daemon['inotify']['files'][$event['wd']]['file'])) {
+							doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is actually a symlink, removing', CRLF);
+							unlink($daemon['inotify']['files'][$event['wd']]['file']);
+						} else {
+							// Get the source of this file.
+							$source = preg_replace('@//@si', '/', $watchdir.'/'.$daemon['inotify']['files'][$event['wd']]['file']);
 							
-							$targetdir = sprintf('%s/%s/Season %d', $watcheddir, $info['name'], $info['season']);
-							$targetname = sprintf('%s %dx%02d.%s', $info['name'], $info['season'], $info['episode'], $fileext);
-
-							$dest = getDestFile(preg_replace('@//@si', '/', $targetdir.'/'.$targetname));
+							// Check if it matches any of the patterns.
+							$patterns = $config['daemon']['reindex']['filepatterns'];
 							
-							doEcho("\t\t", 'Moving from: ', $source, CRLF);
-							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
-							
-							doEcho($source, ' => ', $dest, CRLF);
-							doReport(array('source' => 'daemon::handleINotify', 'message' => $daemon['inotify']['files'][$event['wd']]['file'].' has been archived as watched.'));
-							
-							// Make sure the target directory exists
-							if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
-							if (!rename($source, $dest)) {
-								// Rename failed.
-								// If the file still exists (its possible for a file to get lost
-								// in a failed rename) then readd the watch.
+							$info = getEpisodeInfo($config['daemon']['reindex']['filepatterns'], $daemon['inotify']['files'][$event['wd']]['file']);
+							if ($info != null) {
+								$filename = explode('.', $daemon['inotify']['files'][$event['wd']]['file']);
+								$fileext = strtolower(array_pop($filename));
 								
-								addINotifyWatch($daemon['inotify']['files'][$event['wd']]['file']);
+								$targetdir = sprintf('%s/%s/Season %d', $watcheddir, $info['name'], $info['season']);
+								$targetname = sprintf('%s %dx%02d.%s', $info['name'], $info['season'], $info['episode'], $fileext);
+	
+								$dest = getDestFile(preg_replace('@//@si', '/', $targetdir.'/'.$targetname));
+								
+								doEcho("\t\t", 'Moving from: ', $source, CRLF);
+								doEcho("\t\t", 'Moving to: ', $dest, CRLF);
+								
+								doEcho($source, ' => ', $dest, CRLF);
+								doReport(array('source' => 'daemon::handleINotify', 'message' => $daemon['inotify']['files'][$event['wd']]['file'].' has been archived as watched.'));
+								
+								// Make sure the target directory exists
+								if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
+								if (!rename($source, $dest)) {
+									// Rename failed.
+									// If the file still exists (its possible for a file to get lost
+									// in a failed rename) then readd the watch.
+									
+									addINotifyWatch($daemon['inotify']['files'][$event['wd']]['file']);
+								}
 							}
 						}
 					}
@@ -326,6 +331,7 @@
 		$extentions = $config['daemon']['reindex']['extentions'];
 		$badfiles = $config['daemon']['reindex']['badfile'];
 		$usedirnames = $config['daemon']['reindex']['usedirnames'];
+		$symlinkwatched = $config['daemon']['reindex']['symlinkwatched'];
 		
 		// Get a listing of the directory
 		$dirlist = directoryToArray($downloaddir, false, false);
@@ -368,13 +374,23 @@
 								$info = getEpisodeInfo($filepatterns, $file['name']);
 							}
 							if ($info == null) { $info = $folderinfo; }
-							if ($usedirnames) {
-								$dirname = (isset($showinfo['dirname']) && in_array($showinfo['dirname'], $dirs)) ? $showinfo['dirname'] : $dirs[0];
+							if ($usedirnames || $symlinkwatched) {
+								if ($usedirnames) {
+									$dirname = (isset($showinfo['dirname']) && in_array($showinfo['dirname'], $dirs)) ? $showinfo['dirname'] : $dirs[0];
+								} elseif ($symlinkwatched) {
+									$dirname = $dirs[1];
+								}
 								$targetdir = sprintf('%s/%s/%s/Season %d', $basedir, $dirname, $info['name'], $info['season']);
+								$linkdir = sprintf('%s/%s', $basedir, $dirs[0]);
 							} else {
 								$targetdir = sprintf('%s/%s', $basedir, $dirs[0]);
 							}
 							$targetname = sprintf('%s %dx%02d.%s', $info['name'], $info['season'], $info['episode'], $fileext);
+							
+							if ($config['daemon']['reindex']['ignore0x00'] && (int)$info['season'] == 0 && (int)$info['episode'] == 0) {
+								doEcho('Epsiode appears to be 0x00, ignoring.', CRLF);
+								continue;
+							}
 							
 							// Make sure the target directory exists
 							if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
@@ -393,6 +409,11 @@
 							// If multiple files in this directory get moved, then the
 							// status of the last one will be used.
 							$deleteDir = rename($source, $dest);
+							if ($symlinkwatched) {
+								$link = getDestFile(preg_replace('@//@si', '/', $linkdir.'/'.$targetname));
+								doEcho("\t\t", 'Linking to: ', $link, CRLF);
+								symlink($dest, $link);
+							}
 						}
 					}
 				}

@@ -85,7 +85,7 @@
 	
 	// Should the 'Unwatched' folder actually only contain symlinks rather than
 	// actual files? (Actual files will be put into the 'Watched' folder, inotify
-	// will delete symlinks rather than moving files.)
+	// will do nothing with symlinks.)
 	//
 	// This is useful if you want to keep it obvious which files are unwatched,
 	// but want to allow other machines to access everything without marking them

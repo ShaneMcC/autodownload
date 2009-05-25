@@ -266,8 +266,8 @@
 						doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is being marked as watched.', CRLF);
 						
 						if (is_link($daemon['inotify']['files'][$event['wd']]['file'])) {
-							doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is actually a symlink, removing', CRLF);
-							unlink($daemon['inotify']['files'][$event['wd']]['file']);
+							// doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is actually a symlink, removing', CRLF);
+							// unlink($daemon['inotify']['files'][$event['wd']]['file']);
 						} else {
 							// Get the source of this file.
 							$source = preg_replace('@//@si', '/', $watchdir.'/'.$daemon['inotify']['files'][$event['wd']]['file']);

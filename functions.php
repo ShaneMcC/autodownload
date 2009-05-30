@@ -311,8 +311,6 @@
 				if (function_exists('doPrintR')) { doPrintR($matches); }
 				$result['pattern'] = $pattern;
 				
-				
-				
 				$result['name'] = isset($info['name']) ? $matches[$info['name']] : 'Unknown';
 				$result['season'] = isset($info['season']) ? $matches[$info['season']] : (isset($info['force_season']) ? $info['force_season'] : '00');
 				$result['episode'] = isset($info['episode']) ? $matches[$info['episode']] : '00';

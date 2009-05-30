@@ -116,7 +116,7 @@
 	/**
 	 * Handle the Minute changing.
 	 *
-	 * @param $lastTime The last time the loop ran.
+ 	 * @param $lastTime The last time the loop ran.
 	 * @param $thisTime The time now.
 	 */
 	function handleMinuteChanged($lastTime, $thisTime) {
@@ -195,6 +195,7 @@
 		return $tempname;
 	}
 	
+	
 	/**
 	 * Handle INotify events.
 	 */
@@ -250,10 +251,39 @@
 				// Has a watched file been accessed
 				if (($event['mask'] & IN_ACCESS) > 0 && isset($daemon['inotify']['files'][$event['wd']]['access_count'])) {
 					if (!in_array($event['wd'], $has_accessed)) {
-						// Record how many IN_ACCESS events we get for a file.
-						$daemon['inotify']['files'][$event['wd']]['access_count']++;
-						doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' has been accessed. [', $daemon['inotify']['files'][$event['wd']]['access_count'],']', CRLF);
 						$has_accessed[] = $event['wd'];
+						$blacklist = false;
+						if ($config['daemon']['reindex']['fuser']) {
+							$source = preg_replace('@//@si', '/', $watchdir.'/'.$daemon['inotify']['files'][$event['wd']]['file']);
+							exec('lsof "'.$source.'" 2>/dev/null | tail -n +2', $output);
+							
+							$blacklist_reason = 'Unknown';
+							if (count($output) == 0) {
+								$blacklist = true;
+								$blacklist_reason = 'No LSOF output';
+							} else {
+								foreach ($output as $access) {
+									$bits = preg_split("/\s+/", $access);
+									$process = $bits[0];
+									$user = $bits[2];
+									
+									$array = $config['daemon']['reindex']['fuser_blacklist'];
+									if (in_array($user.'-'.$process, $array) || in_array('*-'.$process, $array) || in_array($user.'-*', $array)) {
+										$blacklist = true;
+										$blacklist_reason = $user.'-'.$process.' matches a blacklisted pair';
+										break;
+									}
+								}
+							}
+						}
+						doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' has been accessed. ');
+						if (!$blacklist) {
+							// Record how many IN_ACCESS events we get for a file.
+							$daemon['inotify']['files'][$event['wd']]['access_count']++;
+							doEcho('[', $daemon['inotify']['files'][$event['wd']]['access_count'],']', CRLF);
+						} else {
+							doEcho('Ignored due to blacklisting. ('.$blacklist_reason.')', CRLF);
+						}
 					}
 				}
 				
@@ -264,13 +294,19 @@
 					doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' has been accessed ', $daemon['inotify']['files'][$event['wd']]['access_count'], ' times.', CRLF);
 					if ($daemon['inotify']['files'][$event['wd']]['access_count'] > $config['daemon']['reindex']['inotify_count']) {
 						doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is being marked as watched.', CRLF);
+						// Get the source of this file.
+						$source = preg_replace('@//@si', '/', $watchdir.'/'.$daemon['inotify']['files'][$event['wd']]['file']);
 						
-						if (is_link($daemon['inotify']['files'][$event['wd']]['file'])) {
-							// doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is actually a symlink, removing', CRLF);
-							// unlink($daemon['inotify']['files'][$event['wd']]['file']);
+						if (is_link($source)) {
+							doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is actually a symlink, ');
+							if ($config['daemon']['reindex']['deletesymlink']) {
+								unlink($daemon['inotify']['files'][$event['wd']]['file']);
+								doEcho('removing.', CRLF);
+							} else {
+								doEcho('ignoring.', CRLF);
+							}
 						} else {
-							// Get the source of this file.
-							$source = preg_replace('@//@si', '/', $watchdir.'/'.$daemon['inotify']['files'][$event['wd']]['file']);
+							doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is not a symlink. Moving', CRLF);
 							
 							// Check if it matches any of the patterns.
 							$patterns = $config['daemon']['reindex']['filepatterns'];

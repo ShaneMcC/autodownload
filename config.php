@@ -8,7 +8,9 @@
 	$config['daemon']['fork'] = false;
 	// How many seconds should the daemon sleep inbetween loops?
 	// Default is 5
-	$config['daemon']['looptime'] = 5;
+	// If using LSOF, this should be higher due to the extra time taken to
+	// run lsof for every event that causes an access.
+	$config['daemon']['looptime'] = 10;
 	
 	// Should all 1x01's be downloaded ?
 	// This is ignored if only-important is true.
@@ -81,16 +83,33 @@
 	// This should be at least 10, preferably higher.
 	// The count is increased by 1 every time the daemon loops and an inotify
 	// event was recieved.
-	$config['daemon']['reindex']['inotify_count'] = 100;
+	// If using LSOF, this needs to be lower due to the extra time taken to
+	// run lsof every access.
+	$config['daemon']['reindex']['inotify_count'] = 50; // 100
 	
 	// Should the 'Unwatched' folder actually only contain symlinks rather than
 	// actual files? (Actual files will be put into the 'Watched' folder, inotify
-	// will do nothing with symlinks.)
+	// will delete symlinks when watched according to settings.)
 	//
 	// This is useful if you want to keep it obvious which files are unwatched,
 	// but want to allow other machines to access everything without marking them
 	// as watched.
 	$config['daemon']['reindex']['symlinkwatched'] = true;
+	
+	// Delete symlinks when watched
+	$config['daemon']['reindex']['deletesymlink'] = true;
+	
+	// should 'fuser' be used to decide if a watch should be counted?
+	//
+	// If 'fuser' output is empty then the watch will NOT be counted. (thus
+	// accesses by other users won't count, unless daemon is running as root)
+	//
+	// Otherwise access will be counted unless "user-process" is in the blacklist.
+	// (user or process can be *)
+	$config['daemon']['reindex']['fuser'] = true;
+	
+	// Fuser blacklist.
+	$config['daemon']['reindex']['fuser_blacklist'] = array('*-ccxstream');
 	
 	//----------------------------------------------------------------------------
 	// Automatic Downloading settings.

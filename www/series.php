@@ -213,7 +213,8 @@
 				$hasDownloaded = hasDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
 				
 				if (!$aired || ($hasDownloaded && !$isAll) || $season < $wantedSeason || ($season == $wantedSeason && $episode['seasonepnum'] < $wantedEpisode)) {
-					echo sprintf('Skipping: %s %dx%02d -> %s', $cleanName, $season, $episode['seasonepnum'], $show['title']), CRLF;
+					$reason = (!$aired) ? 'Not Aired' : ($hasDownloaded && !$isAll) ? 'Already Downloaded' : 'Not Wanted';
+					echo sprintf('Skipping: %s %dx%02d -> %s (%s)', $cleanName, $season, $episode['seasonepnum'], $show['title'], $reason), CRLF;
 					flush();
 					continue;
 				}

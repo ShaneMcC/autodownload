@@ -300,8 +300,8 @@
 						if (is_link($source)) {
 							doEcho($daemon['inotify']['files'][$event['wd']]['file'], ' is actually a symlink, ');
 							if ($config['daemon']['reindex']['deletesymlink']) {
-								unlink($daemon['inotify']['files'][$event['wd']]['file']);
 								doEcho('removing.', CRLF);
+								unlink($source);
 							} else {
 								doEcho('ignoring.', CRLF);
 							}

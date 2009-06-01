@@ -875,6 +875,18 @@
 		function setDownloaded($showname, $season, $episode, $title = '') {
 			return;
 		}
+		
+		/**
+		 * Add a given show to the automatic download list if it isn't already
+		 * there.
+		 *
+		 * @param $show show name.
+		 * @param $info Optional getShowInfo() result for this show.
+		 * @return 0 if added, 1 if updated, 2 if no change made.
+		 */
+		function addAutomatic($show, $info = null) {
+			return 2;
+		}
 	}
 	
 	// Include the downloader methods specified by the config file here so that

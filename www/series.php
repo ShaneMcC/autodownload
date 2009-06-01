@@ -155,7 +155,10 @@
 				echo '  <tr>', CRLF;
 				echo '    <th>Actions</th>', CRLF;
 				echo '    <td colspan=4 class="info">', CRLF;
-				echo '        [<a href="GetTV.php?info=', urlencode(serialize($show)), '">Download this Episode</a>]';
+				echo '        Download:', CRLF;
+				echo '        [<a href="GetTV.php?info=', urlencode(serialize($show)), '">This</a>]';
+				echo '       - [<a href="'.$link.'&download=future&season='.$show['season'].'&episode='.$show['episode'].'">This and future</a>]';
+				echo '       - [<a href="'.$link.'&download=all&season='.$show['season'].'&episode='.$show['episode'].'">This and current</a>]';
 				echo '    </td>', CRLF;
 				echo '  </tr>', CRLF;
 
@@ -175,6 +178,26 @@
 		
 		$count = 0;
 		echo '<pre>', CRLF;
+		$wantedSeason = isset($_REQUEST['season']) ? (int)$_REQUEST['season'] : 0;
+		$wantedEpisode = isset($_REQUEST['episode']) ? (int)$_REQUEST['episode'] : 0;
+		$isAll = $_REQUEST['download'] == "all";
+		
+		if ($_REQUEST['download'] == "future") {
+			// Add to autodownload.
+			$result = addAutomatic($showinfo['name'], $info);
+			switch ($result) {
+				case 0:
+					echo 'Adding as new automatic show successful', CRLF;
+					break;
+				case 1:
+					echo 'Setting to automatic successful', CRLF;
+					break;
+				case 2:
+					echo 'Adding as automatic failed', CRLF;
+					break;
+			}
+		}
+		
 		foreach ($showinfo['episodes'] as $season => $episodes) {
 			foreach ($episodes as $episode) {
 				$show = array();
@@ -186,7 +209,10 @@
 				$show['sources'] = 'tvrage_search';
 				$show['info'] = $info;
 		
-				if (strtotime($episode['airdate']) > time() || (hasDownloaded($show['name'], $show['season'], $show['episode'], $show['title']) && $_REQUEST['download'] != "all")) {
+				$aired = strtotime($episode['airdate']) <= time();
+				$hasDownloaded = hasDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
+				
+				if (!$aired || ($hasDownloaded && !$isAll) || $season < $wantedSeason || ($season == $wantedSeason && $episode['seasonepnum'] < $wantedEpisode)) {
 					echo sprintf('Skipping: %s %dx%02d -> %s', $cleanName, $season, $episode['seasonepnum'], $show['title']), CRLF;
 					flush();
 					continue;

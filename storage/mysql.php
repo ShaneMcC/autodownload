@@ -111,4 +111,43 @@
 			$stmt->execute();
 		}
 	}
+	
+	/**
+	 * Add a given show to the automatic download list if it isn't already
+	 * there.
+	 *
+	 * @param $show show name.
+	 * @param $info Optional getShowInfo() result for this show.
+	 * @return 0 if added, 1 if updated, 2 if no change made.
+	 */
+	function addAutomatic($show, $info = null) {
+		$mysqli = connectSQL();
+		if ($info == null) { $info = getShowInfo($show); }
+		
+		// Check if show is already known.
+		$exists = false;
+		if ($stmt = $mysqli->prepare('SELECT shows.name FROM shows, aliases WHERE (aliases.show = shows.name AND aliases.alias = ?) OR (shows.name = ?);')) {
+			$stmt->bind_param('ss', $show, $show);
+			$stmt->execute();
+			$stmt->store_result();
+			if ($stmt->num_rows > 0) {
+				$exists = true;
+			}
+			$stmt->free_result();
+		}
+		
+		if ($exists) {
+			if ($stmt = $mysqli->prepare('UPDATE shows SET automatic=true WHERE name=?')) {
+				$stmt->bind_param('s', $show);
+				$stmt->execute();
+				return 1;
+			}
+		} else {
+			if ($stmt = $mysqli->prepare('INSERT INTO shows (name, automatic, important, size) VALUES (?, "true", "false", ?)')) {
+				$stmt->bind_param('sd', $show, $info['size']);
+				$stmt->execute();
+				return 0;
+			}
+		}
+	}
 ?>

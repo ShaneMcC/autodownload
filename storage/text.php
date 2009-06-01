@@ -118,6 +118,18 @@
 		}
 		$file = implode("\n", $newlines);
 		file_put_contents(dirname(__FILE__).'/'.$config['storage']['text']['got'], $file);
-		
+	}
+	
+	
+	/**
+	 * Add a given show to the automatic download list if it isn't already
+	 * there.
+	 *
+	 * @param $show show name.
+	 * @param $info Optional getShowInfo() result for this show.
+	 * @return 0 if added, 1 if updated, 2 if no change made.
+	 */
+	function addAutomatic($show, $info = null) {
+		return 2;
 	}
 ?>

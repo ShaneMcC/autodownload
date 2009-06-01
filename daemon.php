@@ -302,6 +302,7 @@
 							if ($config['daemon']['reindex']['deletesymlink']) {
 								doEcho('removing.', CRLF);
 								unlink($source);
+								doReport(array('source' => 'daemon::handleINotify', 'message' => $daemon['inotify']['files'][$event['wd']]['file'].' has been archived as watched.'));
 							} else {
 								doEcho('ignoring.', CRLF);
 							}

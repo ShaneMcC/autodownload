@@ -516,7 +516,7 @@
 						if ($result['status']) {
 							// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
 							setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
-							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d)', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid)));
+							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']))));
 						}
 					}
 				}

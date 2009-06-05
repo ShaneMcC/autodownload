@@ -584,7 +584,7 @@
 				
 				$minumum = $target_optimal * $toolow;
 				$val = (float)str_replace(',', '', (string)$matches[$possibleResult]->sizemb);
-				print_r($matches[$possibleResult]);
+				// print_r($matches[$possibleResult]);
 				if ($val >= $minumum) {
 					$result = $possibleResult;
 				}

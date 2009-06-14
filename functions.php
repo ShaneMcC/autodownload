@@ -670,8 +670,10 @@
 			$show['status'] = (string)$showxml->status;
 			$show['classification'] = (string)$showxml->classification;
 			$show['genres'] = array();
-			foreach ($showxml->genres->genre as $genre) {
-				$show['genres'][] = (string)$genre;
+			if ($showxml->genres->genre) {
+				foreach ($showxml->genres->genre as $genre) {
+					$show['genres'][] = (string)$genre;
+				}
 			}
 			$show['runtime'] = (string)$showxml->runtime;
 			$show['network'] = array();
@@ -691,22 +693,24 @@
 			
 			$i = 0;
 			$show['episodes'] = array();
-			foreach ($showxml->Episodelist->Season as $seasoninfo) {
-				$season = (int)$seasoninfo['no'];
-				$show['episodes'][$season] = array();
-				foreach ($seasoninfo->episode as $episodeinfo) {
-					$i++;
-					$episode = array();
-					$epnum = (int)$episodeinfo->seasonnum;
-					$episode['totalepnum'] = (int)$episodeinfo->epnum;
-					$episode['seasonepnum'] = (int)$epnum;
-					$episode['prodnum'] = (string)$episodeinfo->prodnum;
-					$episode['airdate'] = (string)$episodeinfo->airdate;
-					$episode['link'] = (string)$episodeinfo->link;
-					$episode['title'] = (string)$episodeinfo->title;
-					$episode['screencap'] = ($episodeinfo->screencap) ? (string)$episodeinfo->screencap : '';
-					
-					$show['episodes'][$season][$epnum] = $episode;
+			if ($showxml->Episodelist && $showxml->Episodelist->Season) {
+				foreach ($showxml->Episodelist->Season as $seasoninfo) {
+					$season = (int)$seasoninfo['no'];
+					$show['episodes'][$season] = array();
+					foreach ($seasoninfo->episode as $episodeinfo) {
+						$i++;
+						$episode = array();
+						$epnum = (int)$episodeinfo->seasonnum;
+						$episode['totalepnum'] = (int)$episodeinfo->epnum;
+						$episode['seasonepnum'] = (int)$epnum;
+						$episode['prodnum'] = (string)$episodeinfo->prodnum;
+						$episode['airdate'] = (string)$episodeinfo->airdate;
+						$episode['link'] = (string)$episodeinfo->link;
+						$episode['title'] = (string)$episodeinfo->title;
+						$episode['screencap'] = ($episodeinfo->screencap) ? (string)$episodeinfo->screencap : '';
+						
+						$show['episodes'][$season][$epnum] = $episode;
+					}
 				}
 			}
 			$show['episodecount'] = $i;

@@ -42,6 +42,22 @@
 		return $xml->channel;
 	}
 	
+	/**
+	 * Get the ext description for the given status code if known, else return
+	 * the status code.
+	 *
+	 * @param $code The code to get the description for
+	 * @return Description, or code.
+	 */
+	function getStaus($code) {
+		switch ($code) {
+			case 1:
+				return "Completed";
+			default:
+				return $code;
+		}
+	}
+	
 	header("Content-type: text/xml");
 	echo '<?xml version="1.0" encoding="ISO-8859-1" ?>'.CRLF;
 	echo '<nzb>'.CRLF;
@@ -97,13 +113,13 @@
 	
 	foreach ($data->item as $item) {
 		$size = (int)$item->report_size;
-		if ((string)$item['type'] == 'bytes') {
+		if ((string)$item->report_size['type'] == 'bytes') {
 			$sizemb = $size/1024.0/1024.0;
 			$mbcalc = "true";
-		} elseif ((string)$item['type'] == 'kilobytes') {
+		} elseif ((string)$item->report_size['type'] == 'kilobytes') {
 			$sizemb = $size/1024.0;
 			$mbcalc = "true";
-		} else if ($item['type'] == 'mega') {
+		} else if ((string)$item->report_size['type'] == 'mega') {
 			$sizemb = $size;
 			$mbcalc = "false";
 		}
@@ -134,15 +150,13 @@
 			foreach ($attrs['langauge'] as $lang) {
 				echo "\t\t".'<language>'.htmlspecialchars($lang).'</language>'.CRLF;
 			}
-		} else {
-			echo "\t\t".'<language>Unknown</language>'.CRLF;
 		}
 		
 		echo "\t\t".'<sizemb calculated="'.$mbcalc.'">'.$sizemb.'</sizemb>'.CRLF;
 		echo "\t\t".'<url>http://v3.newzbin.com/browse/post/'.$nzbid.'/</url>'.CRLF;
 		echo "\t\t".'<posted exact="'.htmlspecialchars((string)$item->report_postdate).'" />'.CRLF;
 		echo "\t\t".'<reported exact="'.htmlspecialchars((string)$item->pubDate).'" />'.CRLF;
-		echo "\t\t".'<status description="'.htmlspecialchars((string)$item->report_progress).'">'.(int)$item->report_progress['value'].'</status>'.CRLF;
+		echo "\t\t".'<status description="'.htmlspecialchars((string)$item->report_progress).'">'.getStaus((int)$item->report_progress['value']).'</status>'.CRLF;
 		
 		echo "\t\t".'<comments count="'.(int)$item->report_stats->report_comments.'">http://v3.newzbin.com/browse/post/'.$nzbid.'/comments/</comments>'.CRLF;
 		

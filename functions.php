@@ -272,11 +272,13 @@
 	 * Get the search string for the given show.
 	 *
 	 * @param $show Show array to get searchstring for.
-	 * @param $info (Defaults = empty array) $info array to use. If empty, 
+	 * @param $info (default = empty array) $info array to use. If empty, 
 	 *              $show['info'] will be used, else getShowInfo() will be called
+	 * @param $includeAttributes (default = true) Should attributes be included
+	 *                           in the output?
 	 * @return Final Search String for $show after replacements and attributes.
 	 */
-	function getSearchString($show, $info = array()) {
+	function getSearchString($show, $info = array(), $includeAttributes = false) {
 		if ($info == null || empty($info)) {
 			$info = ($show['info'] == null || empty($show['info'])) ? getShowInfo($show['name']) : $show['info'];
 		}
@@ -287,7 +289,7 @@
 		$searchString = $info['searchstring'];
 		$searchString = str_replace($bit_search, $bit_replace, $searchString);
 		
-		if (trim($info['attributes']) != '') {
+		if ($includeAttributes && trim($info['attributes']) != '') {
 			$searchString .= ' ';
 			$searchString .= $info['attributes'];
 		}
@@ -380,7 +382,10 @@
 		$info = getEpisodeInfo($config['daemon']['reindex']['dirpatterns'], $searchresult);
 		if ($info != null) {
 			return (cleanName($info['name']) == cleanName($show['name']));
+		} else {
+			return ($searchresult == getSearchString($show, $show['info'], $includeAttributes));
 		}
+		
 		return false;
 	}
 	

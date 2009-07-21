@@ -37,11 +37,14 @@
 		
 		echo 'Found Show: ';
 		echo '<a href="GetTV.php?info=', urlencode(serialize($show)), '">';
-		if ($show['info']['automatic'] && goodSource($show)) { echo '<strong>'; }
+		
+		$first = (((int)$show['season'] == 1 && (int)$show['episode'] == 1) && $config['daemon']['autotv']['allfirst']);
+
+		if (($first || $show['info']['automatic']) && ($first || goodSource($show))) { echo '<strong>'; }
 		if ($show['info']['important']) { echo '<em>'; }
 		printf('%s %dx%02d', $show['name'], $show['season'], $show['episode']);
 		if ($show['info']['important']) { echo '</em>'; }
-		if ($show['info']['automatic'] && goodSource($show)) { echo '</strong>'; }
+		if (($first || $show['info']['automatic']) && ($first || goodSource($show))) { echo '</strong>'; }
 		echo '</a>';
 		
 		if (hasDownloaded($show['name'], $show['season'], $show['episode']) > 0) {

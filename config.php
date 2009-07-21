@@ -154,7 +154,7 @@
 	//  * limit - How many results to return. Not required, just return all.
 	//  * sizesort - Specifies sort order of results. Preferably small to large
 	//               to make viewing on GetTV.php less random-looking. Optional
-	$config['search']['provider'] = 'http://localhost/new/nzb/index.php';
+	$config['search']['provider'] = 'http://localhost/new/nzb/search.php';
 	// Username for searching (if needed)
 	$config['search']['username'] = 'unknown';
 	// Password for searching (if needed)

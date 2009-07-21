@@ -51,9 +51,10 @@
 	                                                    '/^(.*)[_ ]-[_ ]([0-9]+)[Xx]([0-9\-]+).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
 	                                                    '/^(.*)[_ ]-[_ ]([0-9]+)(?:[^0-9]+.*)?$/U' => array('name' => 1, 'episode' => 2, 'force_season' => '1'),
 	                                                    '/^selected_files_[0-9]+-[0-9]+$/U' => array('usefilepattern' => true),
+	                                                    '/^force_reindex.*$/U' => array('usefilepattern' => true),
 	                                                   );
 	// Patterns used to match file names when using inotify
-	$config['daemon']['reindex']['filepatterns'] = array('/^(.*)\.s([0-9]+)e([0-9][0-9]).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
+	$config['daemon']['reindex']['filepatterns'] = array('/^(.*)\.[Ss]([0-9]+)[Ee]([0-9][0-9]).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
 	                                                     '/^(.*)\.([0-9]+)[Xx]?([0-9][0-9]).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
 	                                                     '/^(.*) ([0-9]+)[Xx]?([0-9][0-9]).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
 	                                                    );
@@ -153,7 +154,7 @@
 	//  * limit - How many results to return. Not required, just return all.
 	//  * sizesort - Specifies sort order of results. Preferably small to large
 	//               to make viewing on GetTV.php less random-looking. Optional
-	$config['search']['provider'] = 'http://localhost/new/nzb/search.php';
+	$config['search']['provider'] = 'http://localhost/new/nzb/index.php';
 	// Username for searching (if needed)
 	$config['search']['username'] = 'unknown';
 	// Password for searching (if needed)

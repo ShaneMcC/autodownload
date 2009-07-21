@@ -390,6 +390,8 @@
 					
 					// Look at all the files inside this directory.
 					$files = directoryToArray($downloaddir.'/'.$dir['name'], false, false);
+					$hasGood = false;
+					$goodcount = 0;
 					foreach ($files as $file) {
 						if (isset($file['contents'])) { continue; }
 						
@@ -406,6 +408,8 @@
 							}
 							
 							doEcho("\t\t", 'Found good file: ', $file['name'], CRLF);
+							$hasGood = true;
+							$goodcount++;
 							$info = null;
 							if ($folderinfo['usefilepattern']) {
 								$info = getEpisodeInfo($filepatterns, $file['name']);
@@ -441,11 +445,10 @@
 							
 							doReport(array('source' => 'daemon::handleReindex', 'message' => sprintf('Download Completed: %s %dx%02d', $info['name'], $info['season'], $info['episode'])));
 							
-							// Move it. If the move is successful then the directory will
-							// be deleted.
-							// If multiple files in this directory get moved, then the
-							// status of the last one will be used.
-							$deleteDir = rename($source, $dest);
+							// Move it.
+							if (rename($source, $dest)) {
+								$goodcount--;
+							}
 							if ($symlinkwatched) {
 								$link = getDestFile(preg_replace('@//@si', '/', $linkdir.'/'.$targetname));
 								doEcho("\t\t", 'Linking to: ', $link, CRLF);
@@ -455,7 +458,9 @@
 					}
 				}
 				
-				if ($deleteDir) {
+				// If the dir had any good files in it, and all of them were moved, then
+				// we can delete the dir.
+				if ($hasGood && $goodcount == 0) {
 					$dirname = preg_replace('@//@si', '/', $downloaddir.'/'.$dir['name']);
 					doEcho(CRLF, 'Removing: ', $dirname, CRLF);
 					rmdirr($dirname);
@@ -482,7 +487,7 @@
 			// Check if this show is marked as automatic, (and is marked as important if onlyimportant is set true)
 			// Also check that the show hasn't already been downloaded.
 			$important = (($info['important'] && $config['download']['onlyimportant']) || !$config['download']['onlyimportant']);
-			if (goodSource($show) && ($info['automatic'] || $first) && $important && (isset($daemon['cli']['autotv-force']) || !hasDownloaded($show['name'], $show['season'], $show['episode']))) {
+			if (($first || goodSource($show)) && ($info['automatic'] || $first) && $important && (isset($daemon['cli']['autotv-force']) || !hasDownloaded($show['name'], $show['season'], $show['episode']))) {
 				doEcho('Show: ', $show['name'], CRLF);
 				// Search for this show, and get the optimal match.
 				ob_start();

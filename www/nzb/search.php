@@ -8,10 +8,14 @@
 	 * are.
 	 */
 	define('CRLF', "\r\n");
+	$global['default_username'] = 'unknown';
+	$global['default_password'] = 'unknown';
+	$global['username'] = isset($_REQUEST['username']) ? $_REQUEST['username'] : $global['default_username'];
+	$global['password'] = isset($_REQUEST['password']) ? $_REQUEST['password'] : $global['default_password'];
 
 	function searchFor($search) {
 		global $global;
-		$searchurl = 'http://v3.newzbin.com/search/query/?q='.urlencode($search);
+		$searchurl = 'http://'.$global['username'].':'.$global['password'].'@v3.newzbin.com/search/query/?q='.urlencode($search);
 		if (!isset($_REQUEST['nosort'])) {
 			$type = isset($_REQUEST['sorttype']) ? trim($_REQUEST['sorttype']) : 'ps_totalsize';
 			$direction = isset($_REQUEST['sortdirection']) ? trim($_REQUEST['sortdirection']) : 'asc';

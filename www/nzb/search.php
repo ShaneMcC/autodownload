@@ -12,10 +12,11 @@
 	$global['default_password'] = 'unknown';
 	$global['username'] = isset($_REQUEST['username']) ? $_REQUEST['username'] : $global['default_username'];
 	$global['password'] = isset($_REQUEST['password']) ? $_REQUEST['password'] : $global['default_password'];
-
+	
 	function searchFor($search) {
 		global $global;
-		$searchurl = 'http://'.$global['username'].':'.$global['password'].'@v3.newzbin.com/search/query/?q='.urlencode($search);
+		// $searchurl = 'http://'.$global['username'].':'.$global['password'].'@v3.newzbin.com/search/query/?q='.urlencode($search);
+		$searchurl = 'http://v3.newzbin.com/search/query/?q='.urlencode($search);
 		if (!isset($_REQUEST['nosort'])) {
 			$type = isset($_REQUEST['sorttype']) ? trim($_REQUEST['sorttype']) : 'ps_totalsize';
 			$direction = isset($_REQUEST['sortdirection']) ? trim($_REQUEST['sortdirection']) : 'asc';
@@ -40,7 +41,9 @@
 			$searchurl .= '&fauth='.$_REQUEST['fauth'];
 		}
 		
-		$page = file_get_contents($searchurl);
+		ini_set('user_agent', 'Mozilla/5.0 (X11; U; Linux i686; en-US; rv:1.9.0.11) Gecko/2009060308 Ubuntu/9.04 (jaunty) Firefox/3.0.11');
+		$context = stream_context_create(array('http' => array('header'  => "Authorization: Basic " . base64_encode($global['username'].':'.$global['password']))));
+		$page = file_get_contents($searchurl, false, $context);
 		$page = preg_replace("/(<\/?)(\w+):([^>]*>)/", "$1$2_$3", $page);
 		$xml = simplexml_load_string($page);
 		return $xml->channel;

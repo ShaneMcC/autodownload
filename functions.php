@@ -278,7 +278,7 @@
 	 *                           in the output?
 	 * @return Final Search String for $show after replacements and attributes.
 	 */
-	function getSearchString($show, $info = array(), $includeAttributes = false) {
+	function getSearchString($show, $info = array(), $includeAttributes = true) {
 		if ($info == null || empty($info)) {
 			$info = ($show['info'] == null || empty($show['info'])) ? getShowInfo($show['name']) : $show['info'];
 		}
@@ -383,7 +383,7 @@
 		if ($info != null) {
 			return (cleanName($info['name']) == cleanName($show['name']));
 		} else {
-			return ($searchresult == getSearchString($show, $show['info'], $includeAttributes));
+			return ($searchresult == getSearchString($show, $show['info'], false));
 		}
 		
 		return false;

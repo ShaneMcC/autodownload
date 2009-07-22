@@ -214,7 +214,7 @@
 				
 				if (!$aired || ($hasDownloaded && !$isAll) || $season < $wantedSeason || ($season == $wantedSeason && $episode['seasonepnum'] < $wantedEpisode)) {
 					$reason = (!$aired) ? 'Not Aired' : (($hasDownloaded && !$isAll) ? 'Already Downloaded' : 'Not Wanted');
-					echo sprintf('Skipping: %s %dx%02d -> %s (%s)', $cleanName, $season, $episode['seasonepnum'], $show['title'], $reason), CRLF;
+					echo sprintf('Skipping: %s %dx%02d -> %s (%s) [%s]', $cleanName, $season, $episode['seasonepnum'], $show['title'], $reason, getSearchString($show)), CRLF;
 					flush();
 					continue;
 				}

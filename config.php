@@ -115,6 +115,18 @@
 	//----------------------------------------------------------------------------
 	// Automatic Downloading settings.
 	//----------------------------------------------------------------------------
+	// Commands to execute at certain times.
+	// $config['commands']['<type>'] = array('command1', 'command2');
+	// valid types are: post_reindex
+	//                  pre_reindex
+	//                  pre_checkauto
+	//                  post_checkauto
+	//
+	// Type must be lowercase.
+	
+	//----------------------------------------------------------------------------
+	// Automatic Downloading settings.
+	//----------------------------------------------------------------------------
 	// Source to use for automatic downloads. ('' for default);
 	$config['autodownload']['source'] = '';
 	

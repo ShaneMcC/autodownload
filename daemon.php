@@ -359,6 +359,8 @@
 	function handleReindex() {
 		global $config;
 		
+		doCommands('pre_reindex');
+		
 		// The var names in the config are huge, make them nicer for use here.
 		$basedir = $config['daemon']['reindex']['basedir'];
 		$dirs = $config['daemon']['reindex']['dirs'];
@@ -378,6 +380,8 @@
 				$deleteDir = false;
 				// Check if it matches any of the patterns.
 				$folderinfo = getEpisodeInfo($folderpatterns, $dir['name']);
+				$hasGood = false;
+				$goodcount = 0;
 				if ($folderinfo != null) {
 					// Print them.
 					doEcho('-------------------------------------------------------',CRLF);
@@ -390,8 +394,6 @@
 					
 					// Look at all the files inside this directory.
 					$files = directoryToArray($downloaddir.'/'.$dir['name'], false, false);
-					$hasGood = false;
-					$goodcount = 0;
 					foreach ($files as $file) {
 						if (isset($file['contents'])) { continue; }
 						
@@ -467,6 +469,8 @@
 				}
 			}
 		}
+		
+		doCommands('post_reindex');
 	}
 	
 	/**
@@ -474,6 +478,8 @@
 	 */
 	function handleCheckAuto() {
 		global $config, $daemon;
+		
+		doCommands('pre_checkauto');
 		
 		// Posts we need to download.
 		$posts = array();
@@ -527,6 +533,8 @@
 				}
 			}
 		}
+		
+		doCommands('post_checkauto');
 	}
 	
 	// Should we fork?

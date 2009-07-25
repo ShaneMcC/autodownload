@@ -1,4 +1,4 @@
-<?php
+#<?php
 	include_once(dirname(__FILE__).'/config.php');
 
 	/**
@@ -266,6 +266,21 @@
 		}
 		
 		return $shows;
+	}
+	
+	/**
+	 * Execute the commands in the commands array.
+	 *
+	 * @param $type Type of command to execute.
+	 */
+	function doCommands($type) {
+		global $global;
+		
+		if (isset($config['commands']) && isset($config['commands'][strtolower($type)])) {
+			foreach ($config['commands'][strtolower($type)] as $command) {
+				exec($command);
+			}
+		}
 	}
 	
 	/**

@@ -146,7 +146,8 @@
 			}
 		} else {
 			if ($stmt = $mysqli->prepare('INSERT INTO shows (name, automatic, important, size) VALUES (?, "?", "false", ?)')) {
-				$stmt->bind_param('ssd', $show, ($automatic ? "true" : "false"), $info['size']);
+				$value = ($automatic ? "true" : "false");
+				$stmt->bind_param('ssd', $show, $value, $info['size']);
 				$stmt->execute();
 				return 0;
 			}

@@ -53,6 +53,7 @@
 		$result['sources'] = '';
 		$result['important'] = false;
 		$result['size'] = '400';
+		$result['known'] = false;
 		
 		if ($stmt = $mysqli->prepare('SELECT shows.name,shows.automatic,shows.searchstring,shows.dirname,shows.important,shows.size,shows.attributes,shows.sources FROM shows, aliases WHERE (aliases.show = shows.name AND aliases.alias = ?) OR (shows.name = ?);')) {
 			$stmt->bind_param('ss', $result['name'], $result['name']);
@@ -61,6 +62,7 @@
 			if ($stmt->num_rows > 0) {
 				$stmt->bind_result($result['name'], $result['automatic'], $result['searchstring'], $result['dirname'], $result['important'], $result['size'], $result['attributes'], $result['sources']);
 				$stmt->fetch();
+				$result['known'] = true;
 			}
 			$stmt->free_result();
 		}
@@ -113,14 +115,14 @@
 	}
 	
 	/**
-	 * Add a given show to the automatic download list if it isn't already
-	 * there.
+	 * Add a given show to the database download if it isn't already there.
 	 *
 	 * @param $show show name.
 	 * @param $info Optional getShowInfo() result for this show.
+	 * @param $automatic Set as Automatic?
 	 * @return 0 if added, 1 if updated, 2 if no change made.
 	 */
-	function addAutomatic($show, $info = null) {
+	function addShow($show, $info = null, $automatic = false) {
 		$mysqli = connectSQL();
 		if ($info == null) { $info = getShowInfo($show); }
 		
@@ -137,14 +139,14 @@
 		}
 		
 		if ($exists) {
-			if ($stmt = $mysqli->prepare('UPDATE shows SET automatic=true WHERE name=?')) {
+			if ($stmt = $mysqli->prepare('UPDATE shows SET automatic='.($automatic ? 'true' : 'false').' WHERE name=?')) {
 				$stmt->bind_param('s', $show);
 				$stmt->execute();
 				return 1;
 			}
 		} else {
-			if ($stmt = $mysqli->prepare('INSERT INTO shows (name, automatic, important, size) VALUES (?, "true", "false", ?)')) {
-				$stmt->bind_param('sd', $show, $info['size']);
+			if ($stmt = $mysqli->prepare('INSERT INTO shows (name, automatic, important, size) VALUES (?, "?", "false", ?)')) {
+				$stmt->bind_param('ssd', $show, ($automatic ? "true" : "false"), $info['size']);
 				$stmt->execute();
 				return 0;
 			}

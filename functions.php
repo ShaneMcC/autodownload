@@ -1,4 +1,4 @@
-#<?php
+<?php
 	include_once(dirname(__FILE__).'/config.php');
 
 	/**
@@ -872,6 +872,7 @@
 			$result['attributes'] = '' ;
 			$result['important'] = false;
 			$result['size'] = '400';
+			$result['known'] = false;
 			
 			return getShowInfo_process($result);
 		}
@@ -901,14 +902,14 @@
 		}
 		
 		/**
-		 * Add a given show to the automatic download list if it isn't already
-		 * there.
+		 * Add a given show to the database download if it isn't already there.
 		 *
 		 * @param $show show name.
 		 * @param $info Optional getShowInfo() result for this show.
+		 * @param $automatic Set as Automatic?
 		 * @return 0 if added, 1 if updated, 2 if no change made.
 		 */
-		function addAutomatic($show, $info = null) {
+		function addShow($show, $info = null, $automatic = false) {
 			return 2;
 		}
 	}

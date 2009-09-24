@@ -11,7 +11,16 @@
 	// If using LSOF, this should be higher due to the extra time taken to
 	// run lsof for every event that causes an access.
 	$config['daemon']['looptime'] = 10;
+
+	// Automatically add new shows discovered to the database?
+	$config['daemon']['autotv']['autodb'] = true;
 	
+	// Add new shows as automatic?
+	$config['daemon']['autotv']['autoautomatic'] = true;
+
+	// URL to manage.php
+	$config['daemon']['autotv']['manageurl'] = 'http://localhost/new/manage.php';
+
 	// Should all 1x01's be downloaded ?
 	// This is ignored if only-important is true.
 	$config['daemon']['autotv']['allfirst'] = true;

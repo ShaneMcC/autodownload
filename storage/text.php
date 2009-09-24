@@ -40,6 +40,7 @@
 		$result['attributes'] = (isset($Attributes[$name])) ? $Attributes[$name] : '' ;
 		$result['important'] = isset($important[$name]);
 		$result['size'] = (isset($optimalsize[$name])) ? $optimalsize[$name] : '400';
+		$result['known'] = isset($Auto[$name]);
 		
 		return getShowInfo_process($result);
 	}
@@ -122,14 +123,14 @@
 	
 	
 	/**
-	 * Add a given show to the automatic download list if it isn't already
-	 * there.
+	 * Add a given show to the database download if it isn't already there.
 	 *
 	 * @param $show show name.
 	 * @param $info Optional getShowInfo() result for this show.
+	 * @param $automatic Set as Automatic?
 	 * @return 0 if added, 1 if updated, 2 if no change made.
 	 */
-	function addAutomatic($show, $info = null) {
+	function addShow($show, $info = null, $automatic = false) {
 		return 2;
 	}
 ?>

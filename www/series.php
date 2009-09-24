@@ -184,7 +184,7 @@
 		
 		if ($_REQUEST['download'] == "future") {
 			// Add to autodownload.
-			$result = addAutomatic($showinfo['name'], $info);
+			$result = addShow($showinfo['name'], $info, true);
 			switch ($result) {
 				case 0:
 					echo 'Adding as new automatic show successful', CRLF;

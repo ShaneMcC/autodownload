@@ -89,12 +89,13 @@
 	echo "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
 	echo "<tvcal>\n";
 	echo "<cache>".$cache."</cache>\n";
+	echo date('r');
 	foreach ($lines as $line) {
-		$pattern = '#href="http://([0-9]+-[0-9]+-[0-9]+)\.on-my\.tv.*?>(.*?)</a>.*?class=".*?">\'(.*?)\'</span>.*?class=".*?" >S: ([0-9]+) - Ep: ([0-9]+)#';
-			
-		if (preg_match($pattern, $line, $matches)) {
+		$pattern = '#href="http://([0-9]+[.-][0-9]+[.-][0-9]+)\.on-my\.tv.*?>(.*?)</a>.*?class=".*?">\'(.*?)\'</span>.*?class=".*?" >S: ([0-9]+) - Ep: ([0-9]+)#';
+		
+		if (preg_match_all($pattern, $line, $matches)) {
 			$time = explode("-", $matches[1]);
-			$time = mktime(0, 0, 0, $time[1], $time[0], $time[2]);
+			$time = mktime(0, 0, 0, $time[1], $time[0], intval($time[2]));
 		
 			echo "\t<show>\n";
 			echo "\t\t<date time=\"".$time."\">".$matches[1]."</date>\n";

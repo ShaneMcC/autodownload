@@ -489,16 +489,18 @@
 		// Look at all the shows that aired yesterday
 		foreach (getShows(true, -1, -1, false, $config['autodownload']['source']) as $show) {
 			$info = $show['info'];
+			$firstep = ((int)$show['season'] == 1 && (int)$show['episode'] == 1);
+			$first = ($firstep && $config['daemon']['autotv']['allfirst']);
 			// Make sure the show is known to the DB.
 			if ($config['daemon']['autotv']['autodb'] && !$info['known']) {
 				// Add show.
-				$result = addShow($show['name'], $show['info'], $config['daemon']['autotv']['autoautomatic']);
+				$autoautomatic = ($config['daemon']['autotv']['autoautomatic'] == 1 || ($config['daemon']['autotv']['autoautomatic'] == 2 && $firstep));
+				$result = addShow($show['name'], $show['info'], $autoautomatic);
 				if ($result == 0) {
 					$url = $config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']);
-					doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Discovered new (%s) show: %s [Manage: %s]', ($config['daemon']['autotv']['autoautomatic'] ? 'automatic' : 'manual'), $show['name'], $url)));
+					doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Discovered new (%s) show: %s [Manage: %s]', ($autoautomatic ? 'automatic' : 'manual'), $show['name'], $url)));
 				}
 			}
-			$first = (((int)$show['season'] == 1 && (int)$show['episode'] == 1) && $config['daemon']['autotv']['allfirst']);
 			// Check if this show is marked as automatic, (and is marked as important if onlyimportant is set true)
 			// Also check that the show hasn't already been downloaded.
 			$important = (($info['important'] && $config['download']['onlyimportant']) || !$config['download']['onlyimportant']);

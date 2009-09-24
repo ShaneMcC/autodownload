@@ -139,15 +139,16 @@
 		}
 		
 		if ($exists) {
-			if ($stmt = $mysqli->prepare('UPDATE shows SET automatic='.($automatic ? 'true' : 'false').' WHERE name=?')) {
-				$stmt->bind_param('s', $show);
+			if ($stmt = $mysqli->prepare('UPDATE shows SET automatic=? WHERE name=?')) {
+				$autovalue = ($automatic ? 'true' : 'false');
+				$stmt->bind_param('ss', $autovalue, $show);
 				$stmt->execute();
 				return 1;
 			}
 		} else {
-			if ($stmt = $mysqli->prepare('INSERT INTO shows (name, automatic, important, size) VALUES (?, "?", "false", ?)')) {
-				$value = ($automatic ? "true" : "false");
-				$stmt->bind_param('ssd', $show, $value, $info['size']);
+			if ($stmt = $mysqli->prepare('INSERT INTO shows (name, automatic, important, size) VALUES (?, ?, "false", ?)')) {
+				$autovalue = ($automatic ? "true" : "false");
+				$stmt->bind_param('ssd', $show, $autovalue, $info['size']);
 				$stmt->execute();
 				return 0;
 			}

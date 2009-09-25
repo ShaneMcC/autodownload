@@ -30,7 +30,7 @@
 	echo "<tvcal>\n";
 	echo "<cache>".$cache."</cache>\n";
 	$date = 'Jan/01/1970';
-	$source = str_replace('.php', '', basename(__FILE__)).(empty($cache_special) ? '' : '_'.$cache_special);
+	$source = str_replace('.php', '', basename(__FILE__)).(empty($country) ? '' : '_'.$country);
 	if (count($rss->channel->item) > 0) {
 		foreach ($rss->channel->item as $item) {
 			if (preg_match('@^([A-Za-z]+/[0-9]+/[0-9]+) @U', $item->title, $matches)) {

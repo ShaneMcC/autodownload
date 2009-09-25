@@ -188,6 +188,19 @@
 		$source = str_replace('../', '', $source);
 		return file_exists($config['tv']['filebase'].'/'.$source.'.php');
 	}
+	
+	/**
+	 * Check if the given source should be ignored for merging
+	 *
+	 * @param $source Source to check.
+	 * @return true if source is ignored
+	 */
+	function ignoredSource($source) {
+		global $config;
+		
+		$source = str_replace('../', '', $source);
+		return file_exists($config['tv']['filebase'].'/'.$source.'.php.ignore');
+	}
 
 	/**
 	 * Get all the shows that the given source returns.

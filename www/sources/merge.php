@@ -18,7 +18,7 @@
 		$filename = explode('.', $source['name']);
 		$fileext = strtolower(array_pop($filename));
 		$filename = implode('.', $filename);
-		if ($fileext == 'php' && validSource($filename)) {
+		if ($fileext == 'php' && validSource($filename) && !ignoredSource($filename)) {
 			$tv = getTV(isset($_REQUEST['forcereload']), $filename, $extra);
 			foreach ($tv->cache as $cache) {
 				$cacheInfo[] = array('source' => (empty($tv->cache['source'])) ? $filename : $tv->cache['source'],

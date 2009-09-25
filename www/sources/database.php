@@ -18,17 +18,14 @@
 	// database is up to date.
 	if (isset($_REQUEST['forcereload']) || !file_exists($db_savefile) || !is_file($db_savefile) || filemtime($db_savefile) < time()-$db_cachetime) {
 		$cache = 'No';
-		$_REQUEST['forcereload'] = true;
-		ob_start();
-		include('merge.php');
-		ob_end_clean();
+		getTV(true, 'merge', '');
 		@file_put_contents($db_savefile, date('r'));
 	}
 
 	// Now we can do magic!
 	$shows = array();
 	$mysqli = connectSQL();
-	if ($stmt = $mysqli->prepare('SELECT name, season, episode, title, time, group_concat(source separator \', \') as source FROM `airtime` WHERE time > '.(time() - 2764800).' GROUP By name,season,episode,time')) {
+	if ($stmt = $mysqli->prepare('SELECT name, season, episode, title, time, group_concat(source separator \', \') as source FROM `airtime` WHERE time > '.(time() - 2764800).' GROUP By name,season,episode,time ORDER by time')) {
 		$stmt->execute();
 		$stmt->store_result();
 		if ($stmt->num_rows > 0) {
@@ -54,14 +51,14 @@
 	 * @param $a Show 1 to compare
 	 * @param $a Show 2 to compare
 	 */
-	function sortShows($a, $b) {
+	function sortDBShows($a, $b) {
 		if ($a['time'] == $b['time']) {
 				return 0;
 		}
 		return ($a['time'] < $b['time']) ? -1 : 1;
 	}
 
-	usort($shows, 'sortShows');
+	usort($shows, 'sortDBShows');
 	
 	header('Content-type: text/xml');
 	echo '<?xml version="1.0" encoding="UTF-8" ?>', CRLF;

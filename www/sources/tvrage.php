@@ -7,6 +7,7 @@
 	// able to show this week,
 	//----------------------------------------------------------------------------
 	include_once(dirname(__FILE__).'/../../config.php');
+	include_once(dirname(__FILE__).'/../../functions.php');
 
 	if (!isset($cache_special)) { $cache_special = ''; }
 	if (!isset($special)) { $special = ''; }
@@ -29,6 +30,7 @@
 	echo "<tvcal>\n";
 	echo "<cache>".$cache."</cache>\n";
 	$date = 'Jan/01/1970';
+	$source = str_replace('.php', '', basename(__FILE__)).(empty($cache_special) ? '' : '_'.$cache_special);
 	if (count($rss->channel->item) > 0) {
 		foreach ($rss->channel->item as $item) {
 			if (preg_match('@^([A-Za-z]+/[0-9]+/[0-9]+) @U', $item->title, $matches)) {
@@ -45,13 +47,19 @@
 				if (isset($_REQUEST['extra']) && !empty($_REQUEST['extra']) && $_REQUEST['extra'] != date('n-Y', $time)) {
 					continue;
 				}
+				
+				$name = (isset($matches[1]) ? $matches[1] : $other_matches[1]);
+				$season = (isset($matches[2]) ? $matches[2] : 0);
+				$episode = (isset($matches[3]) ? $matches[3] : $other_matches[1]);
 				echo "\t<show>\n";
 				echo "\t\t<date time=\"".$time."\">".$datestring."</date>\n";
-				echo "\t\t<name>".htmlspecialchars((isset($matches[1]) ? $matches[1] : $other_matches[1]), ENT_QUOTES, 'UTF-8')."</name>\n";
+				echo "\t\t<name>".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."</name>\n";
 				echo "\t\t<title>".htmlspecialchars($description, ENT_QUOTES, 'UTF-8')."</title>\n";
-				echo "\t\t<season>".(isset($matches[2]) ? $matches[2] : '')."</season>\n";
-				echo "\t\t<episode>".(isset($matches[3]) ? $matches[3] : $other_matches[1])."</episode>\n";
+				echo "\t\t<season>".$season."</season>\n";
+				echo "\t\t<episode>".$episode."</episode>\n";
 				echo "\t</show>\n";
+				
+				addAirTime($name, $season, $episode, $description, $time, $source);
 			}
 		}
 	}

@@ -12,6 +12,7 @@
 	// hosting and importing on and older copy of the calendar source code.
 	//----------------------------------------------------------------------------
 	include_once(dirname(__FILE__).'/../../config.php');
+	include_once(dirname(__FILE__).'/../../functions.php');
 
 	$cat_savefile = __FILE__.'.cache';
 	$cat_cachetime = $config['tv']['cachetime'];
@@ -90,20 +91,27 @@
 	echo "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";
 	echo "<tvcal>\n";
 	echo "<cache>".$cache."</cache>\n";
+	$source = str_replace('.php', '', basename(__FILE__));
 	foreach ($lines as $line) {
 		$pattern = '#href="/cat/day/([0-9]+-[0-9]+-[0-9]+).*?>(.*?)</a>.*?class=".*?">\'(.*?)\'</span>.*?class=".*?" >S: ([0-9]+) - Ep: ([0-9]+)#';
 		
 		if (preg_match($pattern, $line, $matches)) {
 			$time = explode("-", $matches[1]);
-			$time = mktime(0, 0, 0, $time[1], $time[0], $time[2]);
+			$time = mktime(0, 0, 0, intval($time[1]), intval($time[0]), intval($time[2]));
 		
+			$name = html_entity_decode($matches[2]);
+			$season = $matches[4];
+			$episode = $matches[5];
+			$description = html_entity_decode($matches[3]);			
 			echo "\t<show>\n";
 			echo "\t\t<date time=\"".$time."\">".$matches[1]."</date>\n";
-			echo "\t\t<name>".htmlspecialchars(html_entity_decode($matches[2]), ENT_QUOTES, 'UTF-8')."</name>\n";
-			echo "\t\t<title>".htmlspecialchars(html_entity_decode($matches[3]), ENT_QUOTES, 'UTF-8')."</title>\n";
-			echo "\t\t<season>".$matches[4]."</season>\n";
-			echo "\t\t<episode>".$matches[5]."</episode>\n";
+			echo "\t\t<name>".htmlspecialchars($name, ENT_QUOTES, 'UTF-8')."</name>\n";
+			echo "\t\t<title>".htmlspecialchars($description, ENT_QUOTES, 'UTF-8')."</title>\n";
+			echo "\t\t<season>".$season."</season>\n";
+			echo "\t\t<episode>".$episode."</episode>\n";
 			echo "\t</show>\n";
+			
+			addAirTime($name, $season, $episode, $description, $time, $source);
 		}
 	}
 	echo "</tvcal>";

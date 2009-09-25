@@ -260,7 +260,7 @@
 	// Sources for TV listing
 	//----------------------------------------------------------------------------
 	// Default source?
-	$config['tv']['default_source'] = 'merge';
+	$config['tv']['default_source'] = 'database';
 	// What is the web-accessible path to folder for the sources?
 	$config['tv']['urlbase'] = 'http://localhost/new/sources/';
 	// What is the path to folder for the sources?

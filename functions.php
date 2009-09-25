@@ -912,6 +912,21 @@
 		function addShow($show, $info = null, $automatic = false) {
 			return 2;
 		}
+		
+		/**
+		 * Add a shows airtime.
+		 *
+		 * @param $show show name.
+		 * @param $season show season.
+		 * @param $episode show episode.
+		 * @param $title show title.
+		 * @param $time time
+		 * @param $source source
+		 * @return 0 if added, 1 if updated, 2 if no change made.
+		 */
+		function addAirTime($show, $season, $episode, $title, $time, $source) {
+			return 2;
+		}
 	}
 	
 	// Include the downloader methods specified by the config file here so that

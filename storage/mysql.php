@@ -154,4 +154,47 @@
 			}
 		}
 	}
+	
+	/**
+	 * Add a shows airtime.
+	 *
+	 * @param $show show name.
+	 * @param $season show season.
+	 * @param $episode show episode.
+	 * @param $title show title.
+	 * @param $time time
+	 * @param $source source
+	 * @return 0 if added, 1 if updated, 2 if no change made.
+	 */
+	function addAirTime($show, $season, $episode, $title, $time, $source) {
+		$mysqli = connectSQL();
+		
+		// Check if show is already known.
+		$exists = false;
+		if ($stmt = $mysqli->prepare('SELECT time FROM airtime WHERE name = ? and season = ? and episode = ? and source = ?;')) {
+			$stmt->bind_param('sdds', $show, $season, $episode, $source);
+			$stmt->execute();
+			$stmt->store_result();
+			if ($stmt->num_rows > 0) {
+				$exists = true;
+			}
+			$stmt->free_result();
+		}
+		
+		if ($exists) {
+			if ($stmt = $mysqli->prepare('UPDATE airtime SET time=?,title=? WHERE name = ? and season = ? and episode = ? and source = ?;')) {
+				$stmt->bind_param('dssdds', $time, $title, $show, $season, $episode, $source);
+				$stmt->execute();
+				return 1;
+			}
+		} else {
+			if ($stmt = $mysqli->prepare('INSERT INTO airtime (name, season, episode, title, time, source) VALUES (?, ?, ?, ?, ?, ?)')) {
+				$stmt->bind_param('sddsds', $show, $season, $episode, $title, $time, $source);
+				$stmt->execute();
+				return 0;
+			}
+		}
+		
+		return 2;
+	}
 ?>

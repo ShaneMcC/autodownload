@@ -9,5 +9,6 @@
 	$country = 'UK';
 	$special = '?country='.$country;
 	$cache_special='.'.$country;
+	$sourcename = str_replace('.php', '', basename(__FILE__));
 	include_once(dirname(__FILE__).'/tvrage.php');
 ?>

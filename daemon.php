@@ -445,7 +445,11 @@
 							doEcho("\t\t", 'Moving from: ', $source, CRLF);
 							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
 							
-							doReport(array('source' => 'daemon::handleReindex', 'message' => sprintf('Download Completed: %s %dx%02d', $info['name'], $info['season'], $info['episode'])));
+							$extra = '';
+							if ($config['daemon']['autotv']['showmanage']) {
+								$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($info['name']).')';
+							}
+							doReport(array('source' => 'daemon::handleReindex', 'message' => sprintf('Download Completed: %s %dx%02d%s', $info['name'], $info['season'], $info['episode'], $extra)));
 							
 							// Move it.
 							if (rename($source, $dest)) {
@@ -496,7 +500,7 @@
 				// Add show.
 				$autoautomatic = ($config['daemon']['autotv']['autoautomatic'] == 1 || ($config['daemon']['autotv']['autoautomatic'] == 2 && $firstep));
 				$result = addShow($show['name'], $show['info'], $autoautomatic);
-				if ($result == 0) {
+				if ($result == 0 && $autoautomatic || (!$autoautomatic && !$config['daemon']['autotv']['onlyannounceautomatic'])) {
 					$url = $config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']);
 					doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Discovered new (%s) show: %s [Manage: %s]', ($autoautomatic ? 'automatic' : 'manual'), $show['name'], $url)));
 				}
@@ -538,7 +542,11 @@
 						if ($result['status']) {
 							// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
 							setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
-							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']))));
+							$extra = '';
+							if ($config['daemon']['autotv']['showmanage']) {
+								$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']).')';
+							}
+							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']), $extra)));
 						}
 					}
 				}

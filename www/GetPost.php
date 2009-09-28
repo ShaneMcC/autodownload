@@ -17,7 +17,11 @@
 			$title .= ' (Repeat Download)';
 		}
 		
-		doReport(array('source' => 'GetPost', 'message' => sprintf('Beginning manual download of: %s %dx%02d [%s] (NZB: %d)', $show['name'], $show['season'], $show['episode'], $show['title'], $_REQUEST['nzbid'])));
+		$extra = '';
+		if ($config['daemon']['autotv']['showmanage']) {
+			$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']).')';
+		}
+		doReport(array('source' => 'GetPost', 'message' => sprintf('Beginning manual download of: %s %dx%02d [%s] (NZB: %d)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $_REQUEST['nzbid'], $extra)));
 	}
 	
 	// URL to newzbin page.

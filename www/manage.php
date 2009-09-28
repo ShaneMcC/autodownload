@@ -39,7 +39,10 @@
 			
 			echo '  <tr>', CRLF;
 			echo '    <th>Actions</th>', CRLF;
-			echo '    <td colspan=5>[<a href="?show='.urlencode($_GET['show']).'&toggleAutomatic">Set automatic to ', ($show['automatic'] ? 'false' : 'true' ) ,'</a>]</td>', CRLF;
+			echo '    <td colspan=5>';
+			echo '[<a href="?show='.urlencode($_GET['show']).'&toggleAutomatic">Set automatic to ', ($show['automatic'] ? 'false' : 'true' ) ,'</a>] - ';
+			echo '[<a href="series.php?search='.urlencode($_GET['show']).'">Search for Series</a>]';
+			echo '</td>', CRLF;
 			echo '  </tr>', CRLF;
 			echo '</table>', CRLF;
 			echo '<br>'.CRLF;

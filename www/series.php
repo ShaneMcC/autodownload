@@ -256,7 +256,11 @@
 							echo ' Success!', CRLF;
 							// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
 							setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
-							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning series download of: %s %dx%02d [%s] (NZB: %d)', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid)));
+							$extra = '';
+							if ($config['daemon']['autotv']['showmanage']) {
+								$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']).')';
+							}
+							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning series download of: %s %dx%02d [%s] (NZB: %d)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, $extra)));
 						} else {
 							echo ' Failed.', CRLF;
 						}

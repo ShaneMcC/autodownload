@@ -18,10 +18,16 @@
 	// Add new shows as automatic?
 	// 0 == never, 1 == always, 2 == only if 1x01
 	$config['daemon']['autotv']['autoautomatic'] = 2;
-
+	
+	// Announce only automatic shows that are added?
+	$config['daemon']['autotv']['onlyannounceautomatic'] = true;
+	
 	// URL to manage.php
 	$config['daemon']['autotv']['manageurl'] = 'http://localhost/new/manage.php';
-
+	
+	// Link to manage.php when starting a new download.
+	$config['daemon']['autotv']['showmanage'] = true;
+	
 	// Should all 1x01's be downloaded ?
 	// This is ignored if only-important is true.
 	$config['daemon']['autotv']['allfirst'] = true;

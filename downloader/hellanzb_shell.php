@@ -17,7 +17,7 @@
 		global $config;
 		
 		$log = '/tmp/hella_'.time().'.log';
-		$cmd = $config['downloader']['hellanzb_shell']['python'].' '.$config['downloader']['hellanzb_shell']['location'].' -c '.$config['downloader']['hellanzb_shell']['config'].' -l '.$log.' enqueuenewzbin '.$nzbid;
+		$cmd = $config['downloader']['hellanzb_shell']['python'].' '.$config['downloader']['hellanzb_shell']['location'].' -c '.$config['downloader']['hellanzb_shell']['config'].' -l '.$log.' enqueuenewzbin '.$nzbid.' 2>&1';
 		
 		exec($cmd, $output, $return);
 		if (file_exists($log)) { unlink($log); }
@@ -27,7 +27,8 @@
 		// Hellanzb returns 0 even if the connection failed.
 		// stupid poc.
 		if ($result['status']) {
-			if (stristr(implode(" ", $output), "Unable to connect to XMLRPC server") !== FALSE) {
+			$longoutput = implode(" ", $output);
+			if (stristr($longoutput, "Unable to connect to XMLRPC server") !== FALSE) {
 				$result['status'] = false;
 			}
 		}

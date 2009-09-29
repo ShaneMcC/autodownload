@@ -81,9 +81,9 @@
 	function hasDownloaded($showname, $season, $episode) {
 		$mysqli = connectSQL();
 		$result = 0;
-		
-		if ($stmt = $mysqli->prepare('SELECT time FROM downloaded WHERE name=? and season=? and episode=?')) {
-			$stmt->bind_param('sdd', $showname, $season, $episode);
+		$query = 'SELECT d.time FROM downloaded as d, aliases as a WHERE d.name = a.show AND (d.name = a.alias OR d.name = a.show) AND (a.show = ? OR a.alias = ?) AND season = ? AND episode = ?;';
+		if ($stmt = $mysqli->prepare($query)) {
+			$stmt->bind_param('ssdd', $showname, $showname, $season, $episode);
 			$stmt->execute();
 			$stmt->store_result();
 			if ($stmt->num_rows > 0) {

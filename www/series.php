@@ -159,6 +159,7 @@
 				echo '        [<a href="GetTV.php?info=', urlencode(serialize($show)), '">This</a>]';
 				echo '       - [<a href="'.$link.'&download=future&season='.$show['season'].'&episode='.$show['episode'].'">This and future</a>]';
 				echo '       - [<a href="'.$link.'&download=all&season='.$show['season'].'&episode='.$show['episode'].'">This and current</a>]';
+				echo '       - [<a href="'.$link.'&download=season&season='.$show['season'].'&episode='.$show['episode'].'">This and Season</a>]';
 				echo '    </td>', CRLF;
 				echo '  </tr>', CRLF;
 
@@ -212,7 +213,7 @@
 				$aired = strtotime($episode['airdate']) <= time();
 				$hasDownloaded = hasDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
 				
-				if (!$aired || ($hasDownloaded && !$isAll) || $season < $wantedSeason || ($season == $wantedSeason && $episode['seasonepnum'] < $wantedEpisode)) {
+				if (!$aired || ($hasDownloaded && !$isAll) || $season < $wantedSeason || ($season == $wantedSeason && $episode['seasonepnum'] < $wantedEpisode) || ($season != $wantedSeason && $_REQUEST['download'] == "season")) {
 					$reason = (!$aired) ? 'Not Aired' : (($hasDownloaded && !$isAll) ? 'Already Downloaded' : 'Not Wanted');
 					echo sprintf('Skipping: %s %dx%02d -> %s [%s] (%s)', $cleanName, $season, $episode['seasonepnum'], $show['title'], getSearchString($show), $reason), CRLF;
 					flush();

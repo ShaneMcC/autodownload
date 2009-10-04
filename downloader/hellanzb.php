@@ -72,7 +72,7 @@
 		$output = getPage($server, $port, 'hellanzb', $password, 'status', $enqueue);
 		$result = simplexml_load_string($output);
 		
-		print_r($output);
+		// print_r($output);
 		// print_r($result);
 		if ($result->fault) {
 			return array('output' => $output, 'status' => false);

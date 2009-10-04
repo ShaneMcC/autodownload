@@ -240,7 +240,7 @@
 	//----------------------------------------------------------------------------
 	// Hellanzb details
 	//----------------------------------------------------------------------------
-	$config['downloader']['type'] = 'hellanzb_shell';
+	$config['downloader']['type'] = 'hellanzb';
 	
 	// Configuration Settings for hellanzb
 	$config['downloader']['hellanzb']['config'] = '/usr/etc/hellanzb.conf';
@@ -252,6 +252,18 @@
 	$config['downloader']['hellanzb_shell']['location'] = '/usr/bin/hellanzb.py';
 	// Location of hellanzb config (libnotify must be disabled)
 	$config['downloader']['hellanzb_shell']['config'] = '/usr/etc/hellanzb.conf.web';
+	
+	// Configuration Settings for sabnzbd
+	// Username for api access
+	$config['downloader']['sabnzbd']['username'] = '';
+	// Password for api access
+	$config['downloader']['sabnzbd']['password'] = '';
+	// Category to add downloads to
+	$config['downloader']['sabnzbd']['category'] = 'Automatic';
+	// Host of sabnzbd
+	$config['downloader']['sabnzbd']['server'] = '127.0.0.1';
+	// Port of sabnzbd
+	$config['downloader']['sabnzbd']['port'] = '8080';
 	
 	//----------------------------------------------------------------------------
 	// Multi-Download sleep times.

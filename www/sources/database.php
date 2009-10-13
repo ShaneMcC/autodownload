@@ -25,7 +25,9 @@
 	// Now we can do magic!
 	$shows = array();
 	$mysqli = connectSQL();
-	if ($stmt = $mysqli->prepare('SELECT name, season, episode, title, time, group_concat(source separator \', \') as source FROM `airtime` WHERE time > '.(time() - 2764800).' GROUP By name,season,episode,time ORDER by time')) {
+	$query = 'SELECT COALESCE(aliases.show, airtime.name) as showname, season, episode, title, time, group_concat(source separator \', \') as source FROM `airtime` LEFT JOIN aliases ON (aliases.show = airtime.name or aliases.alias = airtime.name) WHERE time > '.(time() - 2764800).' GROUP By showname,season,episode,time ORDER by time';
+	// $query = 'SELECT name, season, episode, title, time, group_concat(source separator \', \') as source FROM `airtime` WHERE time > '.(time() - 2764800).' GROUP By name,season,episode,time ORDER by time';
+	if ($stmt = $mysqli->prepare($query)) {
 		$stmt->execute();
 		$stmt->store_result();
 		if ($stmt->num_rows > 0) {

@@ -499,7 +499,7 @@
 			if ($config['daemon']['autotv']['autodb'] && !$info['known']) {
 				// Add show.
 				$autoautomatic = ($config['daemon']['autotv']['autoautomatic'] == 1 || ($config['daemon']['autotv']['autoautomatic'] == 2 && $firstep));
-				$result = addShow($show['name'], $show['info'], $autoautomatic);
+				$result = addShow($show['name'], $show['info'], $autoautomatic, $show['sources']);
 				if ($result == 0 && $autoautomatic || (!$autoautomatic && !$config['daemon']['autotv']['onlyannounceautomatic'])) {
 					$url = $config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']);
 					doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Discovered new (%s) show: %s [Manage: %s]', ($autoautomatic ? 'automatic' : 'manual'), $show['name'], $url)));

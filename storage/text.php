@@ -128,9 +128,10 @@
 	 * @param $show show name.
 	 * @param $info Optional getShowInfo() result for this show.
 	 * @param $automatic Set as Automatic?
+	 * @param $sources Sources for this show.
 	 * @return 0 if added, 1 if updated, 2 if no change made.
 	 */
-	function addShow($show, $info = null, $automatic = false) {
+	function addShow($show, $info = null, $automatic = false, $sources = "") {
 		return 2;
 	}
 	
@@ -147,5 +148,14 @@
 	 */
 	function addAirTime($show, $season, $episode, $title, $time, $source) {
 		return 2;
+	}
+	
+	/**
+	 * Get all shows.
+	 *
+	 * @return Array of show infos, automatic before manual.
+	 */
+	function getAllShows() {
+		return array();
 	}
 ?>

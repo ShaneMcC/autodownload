@@ -35,7 +35,9 @@
 	/**
 	 * Get information about the given show from the database.
 	 *
-	 * @param $showname Show to get information for
+	 * @param $showname Show to get information for. If this is an array then it
+	 *                  is assumed that the data has already been taken from the
+	 *                  database and this is used insted.
 	 * @return Array containing information from the database for the given show.
 	 */
 	function getShowInfo($showname) {
@@ -43,28 +45,32 @@
 		
 		$mysqli = connectSQL();
 		
+		$askDB = !is_array($showname);
+		
 		$result = array();
 		$result['request'] = (string)$showname;
-		$result['name'] = (string)$showname;
-		$result['automatic'] = false;
-		$result['searchstring'] = '';
-		$result['dirname'] = '';
-		$result['attributes'] = '';
-		$result['sources'] = '';
-		$result['important'] = false;
-		$result['size'] = '400';
-		$result['known'] = false;
+		$result['name'] = (!$askDB) ? $showname['name'] : (string)$showname;
+		$result['automatic'] = (!$askDB) ? $showname['automatic'] : false;
+		$result['searchstring'] = (!$askDB) ? $showname['searchstring'] : '';
+		$result['dirname'] = (!$askDB) ? $showname['dirname'] : '';
+		$result['attributes'] = (!$askDB) ? $showname['attributes'] : '';
+		$result['sources'] = (!$askDB) ? $showname['sources'] : '';
+		$result['important'] = (!$askDB) ? $showname['important'] : false;
+		$result['size'] = (!$askDB) ? $showname['size'] : '400';
+		$result['known'] = (!$askDB) ? true : false;
 		
-		if ($stmt = $mysqli->prepare('SELECT shows.name,shows.automatic,shows.searchstring,shows.dirname,shows.important,shows.size,shows.attributes,shows.sources FROM shows, aliases WHERE (aliases.show = shows.name AND aliases.alias = ?) OR (shows.name = ?);')) {
-			$stmt->bind_param('ss', $result['name'], $result['name']);
-			$stmt->execute();
-			$stmt->store_result();
-			if ($stmt->num_rows > 0) {
-				$stmt->bind_result($result['name'], $result['automatic'], $result['searchstring'], $result['dirname'], $result['important'], $result['size'], $result['attributes'], $result['sources']);
-				$stmt->fetch();
-				$result['known'] = true;
+		if ($askDB) {
+			if ($stmt = $mysqli->prepare('SELECT shows.name,shows.automatic,shows.searchstring,shows.dirname,shows.important,shows.size,shows.attributes,shows.sources FROM shows, aliases WHERE (aliases.show = shows.name AND aliases.alias = ?) OR (shows.name = ?);')) {
+				$stmt->bind_param('ss', $result['request'], $result['request']);
+				$stmt->execute();
+				$stmt->store_result();
+				if ($stmt->num_rows > 0) {
+					$stmt->bind_result($result['name'], $result['automatic'], $result['searchstring'], $result['dirname'], $result['important'], $result['size'], $result['attributes'], $result['sources']);
+					$stmt->fetch();
+					$result['known'] = true;
+				}
+				$stmt->free_result();
 			}
-			$stmt->free_result();
 		}
 
 		return getShowInfo_process($result);
@@ -120,11 +126,19 @@
 	 * @param $show show name.
 	 * @param $info Optional getShowInfo() result for this show.
 	 * @param $automatic Set as Automatic?
+	 * @param $sources Sources for this show.
 	 * @return 0 if added, 1 if updated, 2 if no change made.
 	 */
-	function addShow($show, $info = null, $automatic = false) {
+	function addShow($show, $info = null, $automatic = false, $sources = "") {
 		$mysqli = connectSQL();
 		if ($info == null) { $info = getShowInfo($show); }
+		
+		if (is_array($sources)) {
+			$sources = implode(' ', $sources);
+		} else { 
+			$sources = str_replace(',', ' ', $sources);
+			$sources = preg_replace('#\s+#', ' ', $sources);
+		}
 		
 		// Check if show is already known.
 		$exists = false;
@@ -146,9 +160,9 @@
 				return 1;
 			}
 		} else {
-			if ($stmt = $mysqli->prepare('INSERT INTO shows (name, automatic, important, size) VALUES (?, ?, "false", ?)')) {
+			if ($stmt = $mysqli->prepare('INSERT INTO shows (name, automatic, important, size, sources) VALUES (?, ?, "false", ?, ?)')) {
 				$autovalue = ($automatic ? "true" : "false");
-				$stmt->bind_param('ssd', $show, $autovalue, $info['size']);
+				$stmt->bind_param('ssds', $show, $autovalue, $info['size'], $sources);
 				$stmt->execute();
 				return 0;
 			}
@@ -196,5 +210,24 @@
 		}
 		
 		return 2;
+	}
+	
+	/**
+	 * Get all shows.
+	 *
+	 * @return Array of show infos, automatic before manual.
+	 */
+	function getAllShows() {
+		$mysqli = connectSQL();
+		
+		$output = array();
+		
+		$query = 'SELECT name,automatic,searchstring,dirname,important,size,attributes,sources FROM shows ORDER BY automatic, important, name';
+		$result = $mysqli->query($query);
+		while (($row = $result->fetch_array(MYSQLI_ASSOC)) != null) {
+			$output[] = getShowInfo($row);
+		}
+		
+		return $output;
 	}
 ?>

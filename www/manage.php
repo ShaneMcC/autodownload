@@ -62,7 +62,30 @@
 		echo '    <a href="?show='.urlencode($_GET['show']).'">Back to manage page</a>', CRLF;
 	} else if (!isset($_GET['show'])) {
 		head('Series Downloader :: Manage', '', getCSS(false, true));
-		echo 'Sometime there might be a show listing here.';
+		$show = getAllShows();
+		$i = 0;
+		$count = count($show);
+		
+		function printShow($show) {
+			echo '<a href="manage.php?show='.urlencode($show['name']).'">'.htmlspecialchars($show['name']).'</a><br>';
+		}
+		
+		echo '<H2>Automatic, Important</H2>';
+		while ($count > $i && $show[$i]['automatic'] == true && $show[$i]['important'] == true) {
+			printShow($show[$i++]);
+		}
+		
+		echo '<br><hr>';
+		echo '<H2>Automatic</H2>';
+		while ($count > $i && $show[$i]['automatic'] == true) {
+			printShow($show[$i++]);
+		}
+		
+		echo '<br><hr>';
+		echo '<H2>Other</H2>';
+		while ($count > $i) {
+			printShow($show[$i++]);
+		}
 	}
 	
 	foot();

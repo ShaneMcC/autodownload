@@ -54,7 +54,7 @@
 	// Base directory to reindex into
 	$config['daemon']['reindex']['basedir'] = '/media/data/TV/';
 	// Base directory to reindex from
-	$config['daemon']['reindex']['downloaddir'] = '/media/data/nzb/';
+	$config['daemon']['reindex']['downloaddir'] = '/media/data/nzb/Automatic';
 	
 	// When reindexing, ignore episodes that end up as 0x00.
 	// 0x00 Usually means that the parsing of the title went wrong.
@@ -240,7 +240,7 @@
 	//----------------------------------------------------------------------------
 	// Hellanzb details
 	//----------------------------------------------------------------------------
-	$config['downloader']['type'] = 'hellanzb';
+	$config['downloader']['type'] = 'sabnzbd';
 	
 	// Configuration Settings for hellanzb
 	$config['downloader']['hellanzb']['config'] = '/usr/etc/hellanzb.conf';
@@ -264,6 +264,8 @@
 	$config['downloader']['sabnzbd']['server'] = '127.0.0.1';
 	// Port of sabnzbd
 	$config['downloader']['sabnzbd']['port'] = '8080';
+	// apikey of sabnzbd
+	$config['downloader']['sabnzbd']['apikey'] = '';
 	
 	//----------------------------------------------------------------------------
 	// Multi-Download sleep times.

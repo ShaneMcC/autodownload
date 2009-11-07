@@ -82,7 +82,7 @@
 	 */
 	function handleLoop() {
 		global $config, $daemon;
-
+		
 		// Check to see what time has changed
 		foreach ($config['times'] as $time => $format) {
 			// Get the time from the previous loop

@@ -1,3 +1,7 @@
+-- Backup client charset and force to UTF-8 while adding tables.
+SET @saved_cs_client     = @@character_set_client;
+SET character_set_client = utf8;
+
 -- This table stores a selection of shows so that the auto downloader knows what
 -- it should be automatically downloading.
 DROP TABLE IF EXISTS `shows`;
@@ -34,3 +38,19 @@ CREATE TABLE `aliases` (
   PRIMARY KEY  (`alias`,`show`),
   FOREIGN KEY (`show`) REFERENCES `shows` (`name`)
 ) ENGINE=InnoDB DEFAULT CHARSET=latin1;
+
+-- This table is used by the databse source for storing and retrieving the time
+-- that a show aired.
+DROP TABLE IF EXISTS `airtime`;
+CREATE TABLE `airtime` (
+  `name` varchar(100) NOT NULL,
+  `season` int(11) NOT NULL,
+  `episode` int(11) NOT NULL,
+  `title` varchar(100) NOT NULL,
+  `time` int(11) NOT NULL,
+  `source` varchar(100) NOT NULL,
+  PRIMARY KEY  (`name`,`season`,`episode`,`source`)
+) ENGINE=MyISAM DEFAULT CHARSET=latin1;
+
+-- Restore Charset
+SET character_set_client = @saved_cs_client;

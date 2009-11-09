@@ -11,7 +11,22 @@
 	
 	// Make $mysqli null so we know that it hasn't been created yet.
 	$mysqli = null;
-	
+
+	/**
+	 * Check if there was an error and echo it.
+	 */
+	function checkLastError() {
+		global $mysqli;
+		if ($mysqli != null) {
+			$error = $mysqli->error;
+			if (!empty($error)) {
+				echo '------------------', "\n";
+				echo 'Mysql Error: ', $error, "\n";
+				echo '------------------', "\n";
+			}
+		}
+	}
+
 	/**
 	 * Try to connect to the MySQL Database.
 	 * If the connection works or a database connection already exists then this
@@ -21,7 +36,17 @@
 	 */
 	function connectSQL() {
 		global $mysqli, $config;
-		
+
+		if ($mysqli != null) {
+			// Try to ping and reconnect.
+			$mysqli->ping();
+			// Check if reconnect was successful.
+			if (!$mysqli->ping()) {
+				// Still not connected, set to null and we will reconnect below.
+				$mysqli = null;
+			}
+		}
+
 		if ($mysqli == null) {
 			$mysqli = @new mysqli($config['storage']['mysql']['host'], $config['storage']['mysql']['user'], $config['storage']['mysql']['pass'], $config['storage']['mysql']['database'], $config['storage']['mysql']['port']);
 			if (mysqli_connect_errno()) {
@@ -72,7 +97,8 @@
 				$stmt->free_result();
 			}
 		}
-
+		
+		checkLastError();
 		return getShowInfo_process($result);
 	}
 	
@@ -99,6 +125,7 @@
 			$stmt->free_result();
 		}
 		
+		checkLastError();
 		return $result;
 	}
 	
@@ -118,6 +145,8 @@
 			$stmt->bind_param('sddds', $showname, $season, $episode, $time, $title);
 			$stmt->execute();
 		}
+		
+		checkLastError();
 	}
 	
 	/**
@@ -167,6 +196,8 @@
 				return 0;
 			}
 		}
+		
+		checkLastError();
 	}
 	
 	/**
@@ -195,20 +226,27 @@
 			$stmt->free_result();
 		}
 		
+		checkLastError();
+		
 		if ($exists) {
 			if ($stmt = $mysqli->prepare('UPDATE airtime SET time=?,title=? WHERE name = ? and season = ? and episode = ? and source = ?;')) {
 				$stmt->bind_param('dssdds', $time, $title, $show, $season, $episode, $source);
 				$stmt->execute();
+				
+				checkLastError();
 				return 1;
 			}
 		} else {
 			if ($stmt = $mysqli->prepare('INSERT INTO airtime (name, season, episode, title, time, source) VALUES (?, ?, ?, ?, ?, ?)')) {
 				$stmt->bind_param('sddsds', $show, $season, $episode, $title, $time, $source);
 				$stmt->execute();
+				
+				checkLastError();
 				return 0;
 			}
 		}
 		
+		checkLastError();
 		return 2;
 	}
 	
@@ -228,6 +266,7 @@
 			$output[] = getShowInfo($row);
 		}
 		
+		checkLastError();
 		return $output;
 	}
 ?>

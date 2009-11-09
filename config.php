@@ -11,6 +11,8 @@
 	// If using LSOF, this should be higher due to the extra time taken to
 	// run lsof for every event that causes an access.
 	$config['daemon']['looptime'] = 10;
+	// Daemon log file/
+	$config['daemon']['logfile'] = dirname(__FILE__).'/daemon.log';
 
 	// Automatically add new shows discovered to the database?
 	$config['daemon']['autotv']['autodb'] = true;

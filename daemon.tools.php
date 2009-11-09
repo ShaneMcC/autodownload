@@ -104,7 +104,7 @@
 	function doEcho($text) {
 		global $__daemontools;
 		
-		if (!$__daemontools['forked']) {
+		if (!$__daemontools['forked'] || $__daemontools['force_echo']) {
 			foreach (func_get_args() as $arg) {
 				echo $arg;
 			}

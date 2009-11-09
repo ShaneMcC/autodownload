@@ -3,6 +3,8 @@
 	include_once(dirname(__FILE__).'/../functions.php');
 	set_time_limit(0);
 	
+	if (isset($_GET['show'])) { $_GET['show'] = unslash($_GET['show']); }
+	
 	if (isset($_GET['show']) && !isset($_GET['toggleAutomatic']) ) {
 		head('Series Downloader :: Manage :: '.$_GET['show'], '', getCSS(true, false));
 		$show = getShowInfo($_GET['show']);

@@ -11,6 +11,7 @@
 	addCLIParam('', 'autotv-force', 'Run a manual AutoTV check and redownload shows marked as "got", don\'t start daemon.');
 	addCLIParam('', 'noreindex', 'Don\'t periodically reindex.');
 	addCLIParam('', 'noautotv', 'Don\'t periodically run AutoTV checks.');
+	addCLIParam('', 'debug', 'Cause logging of actions by doDaemonLoop to be logged to '.$config['daemon']['logfile']);
 	addCLIParam('', 'pid', 'Specify an alternative PID file.', true);
 	
 	$daemon['cli'] = parseCLIParams($_SERVER['argv']);
@@ -20,7 +21,7 @@
 		doEcho(showCLIParams(), CRLF);
 		die();
 	}
-	
+
 	/**
 	 * Handle the Daemon Loop
 	 *
@@ -28,9 +29,13 @@
 	 * @param $args Array of arguments for this callback
 	 */
 	function doDaemonLoop($type, $args) {
-		// global $__daemontools;
-		// doEcho('doDaemonLoop: ', $__daemontools['callbacks'][$type]['description'], CRLF);
-		
+		global $__daemontools, $config;
+
+		if (DAEMON_DEBUG) {
+			ob_start();
+			$__daemontools['force_echo'] = true;
+			doEcho('doDaemonLoop: ', $__daemontools['callbacks'][$type]['description'], CRLF);
+		}
 		switch ($type) {
 			case DAEMONTOOLS_LOOP:
 				handleLoop();
@@ -55,6 +60,16 @@
 			case DAEMONTOOLS_EXITING:
 			default:
 				break;
+		}
+		if (DAEMON_DEBUG) { 
+			$__daemontools['force_echo'] = false;
+			$output = ob_get_contents();
+			if ($__daemontools['forked']) {
+				ob_end_clean();
+			} else {
+				ob_end_flush();
+			}
+			file_put_contents($config['daemon']['logfile'], $output, FILE_APPEND);
 		}
 	}
 	
@@ -556,6 +571,13 @@
 		doCommands('post_checkauto');
 	}
 	
+	// Debugging enabled?
+	define('DAEMON_DEBUG', isset($daemon['cli']['debug']));
+	if (DAEMON_DEBUG) {
+		doEcho('Debugging Enabled. (', $config['daemon']['logfile'], ')', "\n");
+		unlink('/tmp/daemon.log');
+	}
+
 	// Should we fork?
 	$fork = $config['daemon']['fork'];
 	if (isset($daemon['cli']['foreground'])) { $fork = false; }

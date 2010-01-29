@@ -1,9 +1,11 @@
 <?php
 	include_once(dirname(__FILE__).'/../config.php');
 	include_once(dirname(__FILE__).'/../functions.php');
-	
+	if (isset($_REQUEST['is']) && is_array($_REQUEST[$_REQUEST['is']])) {
+		$_REQUEST['info'] = implode($_REQUEST[$_REQUEST['is']], '');
+	}
 	$show = unserialize($_REQUEST['info']);
-	
+
 	head(sprintf('TV Downloader - %s %dx%02d', $show['name'], $show['season'], $show['episode']), '', getCSS(true, false));
 	
 	$info = (is_array($show['info'])) ? $show['info'] : getShowInfo($show['name']);

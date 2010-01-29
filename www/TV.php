@@ -21,6 +21,22 @@
 		
 		$starttime = strtotime($month.'/'.$day.'/'.$year);
 	}
+
+	function getLink($show) {
+		$result = serialize($show);
+		if (strlen($result) < 512) {
+			return 'info=' . urlencode($result);
+		} else {
+			// Split it.
+			$bits = explode("\n", chunk_split($result, 510, "\n"));
+			$result = 'is=i';
+			$i = 1;
+			foreach ($bits as $bit) {
+				$result .= '&i['.($i++).']='.urlencode($bit);
+			}
+			return $result;
+		}
+	}
 	
 	echo '<pre>';
 	if ($starttime != $endtime) {
@@ -36,7 +52,7 @@
 		if ($_REQUEST['showonlyimportant'] && !$show['info']['important']) { continue; }
 		
 		echo 'Found Show: ';
-		echo '<a href="GetTV.php?info=', urlencode(serialize($show)), '">';
+		echo '<a href="GetTV.php?', getLink($show), '">';
 		
 		$first = (((int)$show['season'] == 1 && (int)$show['episode'] == 1) && $config['daemon']['autotv']['allfirst']);
 

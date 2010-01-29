@@ -65,8 +65,8 @@
 	// Patterns used to match directory names.
 	// Array containing key/value pairs. Keys are the patterns to match, values
 	// are an array which shows where each key-part of the match is.
-	$config['daemon']['reindex']['dirpatterns'] = array('/^(.*)[_ ]-[_ ]([0-9]+)[Xx]([0-9\-]+)[_ ]-[_ ]([^_]+)(?:_.*)?$/U' => array('name' => 1, 'season' => 2, 'episode' => 3, 'title' => 4),
-	                                                    '/^(.*)[_ ]-[_ ]([0-9]+)[Xx]([0-9\-]+).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
+	$config['daemon']['reindex']['dirpatterns'] = array('/^(.*)[_ ]-[_ ]([0-9S]+)[Xx]([0-9\-]+)[_ ]-[_ ]([^_]+)(?:_.*)?$/U' => array('name' => 1, 'season' => 2, 'episode' => 3, 'title' => 4),
+	                                                    '/^(.*)[_ ]-[_ ]([0-9S]+)[Xx]([0-9\-]+).*$/U' => array('name' => 1, 'season' => 2, 'episode' => 3),
 	                                                    '/^(.*)[_ ]-[_ ]([0-9]+)(?:[^0-9]+.*)?$/U' => array('name' => 1, 'episode' => 2, 'force_season' => '1'),
 	                                                    '/^selected_files_[0-9]+-[0-9]+$/U' => array('usefilepattern' => true),
 	                                                    '/^force_reindex.*$/U' => array('usefilepattern' => true),

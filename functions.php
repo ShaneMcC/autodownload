@@ -144,7 +144,14 @@
 	 */
 	function unslash($text) {
 		if (get_magic_quotes_gpc()) {
-			return stripslashes($text);
+			if (is_array($text)) {
+				foreach ($text as $key => $value) {
+					$text[$key] = unslash($value);
+				}
+				return $text;
+			} else {
+				return stripslashes($text);
+			}
 		} else {
 			return $text;
 		}

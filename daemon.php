@@ -507,6 +507,7 @@
 		doEcho('Trying Auto Download..', CRLF);
 		// Look at all the shows that aired yesterday
 		foreach (getShows(true, -1, -1, false, $config['autodownload']['source']) as $show) {
+//		foreach (getShows(true, strtotime("03/19/2010"), -1, false, $config['autodownload']['source']) as $show) {
 			$info = $show['info'];
 			$firstep = ((int)$show['season'] == 1 && (int)$show['episode'] == 1);
 			$first = ($firstep && $config['daemon']['autotv']['allfirst']);
@@ -551,7 +552,22 @@
 						doEcho('Optimal: ', $optimal, CRLF);
 						doEcho('Best: ', $bestid, CRLF);
 						// Try to download.
-						$result = downloadNZB($bestid);
+						if (isset($best->raw)) {
+							if (isset($best->files->file)) {
+								$bestid = '';
+								foreach ($best->files->file as $file) {
+									if (!empty($bestid)) { $bestid .= ','; }
+									$bestid .= $file;
+								}
+								$directfilename = sprintf('%s %dx%02d', $show['name'], $show['season'], $show['episode']);
+								$result = downloadDirect($bestid, $directfilename);
+							} else {
+								$result = false;
+							}
+						} else {
+							$result = downloadNZB($bestid);
+						}
+						
 						doEcho('Result: ');
 						doPrintR($result);
 						if ($result['status']) {
@@ -563,6 +579,8 @@
 							}
 							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']), $extra)));
 						}
+					} else {
+						doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('No downloads found for: %s %dx%02d [%s] %s', $show['name'], $show['season'], $show['episode'], $show['title'], $extra)));
 					}
 				}
 			}

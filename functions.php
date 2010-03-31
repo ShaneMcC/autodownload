@@ -405,6 +405,7 @@
 	 * getOptimal will ignore them.
 	 * This uses $config['daemon']['reindex']['dirpatterns'] to extract the show
 	 * name and then checks if it matches the given show name.
+	 * This will try with and without special characters in the name.
 	 *
 	 * @param $searchresult Result to check.
 	 * @param $show Show to check. (if no 'name' param exists, returns true)
@@ -413,15 +414,24 @@
 	function isGoodMatch($searchresult, $show) {
 		global $config;
 		if (!isset($show['name'])) { return true; }
+		$result = false;
 		
 		$info = getEpisodeInfo($config['daemon']['reindex']['dirpatterns'], $searchresult);
 		if ($info != null) {
-			return (cleanName($info['name']) == cleanName($show['name']));
+			$result = (cleanName($info['name']) == cleanName($show['name']));
 		} else {
-			return ($searchresult == getSearchString($show, $show['info'], false));
+			$result = ($searchresult == getSearchString($show, $show['info'], false));
+		}
+
+		if (!$result) {
+			if ($info != null) {
+				$result = (cleanName($info['name'], false, false) == cleanName($show['name'], false, false));
+			} else {
+				$result = ($searchresult == cleanName(getSearchString($show, $show['info'], false), false, false));
+			}
 		}
 		
-		return false;
+		return $result;
 	}
 	
 	/**
@@ -435,14 +445,20 @@
 	 * @param $name Name to clean up
 	 * @param $askDatabase (Default = true) Check with the database to get the
 	 *                     real case for the name?
+	 * @param $nonAlphaNumeric Allow non-alphanumeric characters in the name?
 	 * @return Cleaned up name.
 	 */
-	function cleanName($name, $askDatabase = true) {
+	function cleanName($name, $askDatabase = true, $nonAlphaNumeric = true) {
 		// replace any .s or _s that were used in place of spaces, with spaces.
 		$name = preg_replace('@([a-zA-Z0-9])\.([a-zA-Z0-9])@', '\1 \2', $name);
 		
 		// Replace any non alphanumerics or some special characters with spaces.
 		$name = preg_replace('@[^a-zA-Z0-9\(\):\']@', ' ', $name);
+		
+		// If $nonAlphaNumeric is false, then only allow alphanumeric.
+		if (!$nonAlphaNumeric) {
+			$name = preg_replace('@[^a-zA-Z0-9]@', ' ', $name);
+		}
 		
 		// Replace multiple spaces in a row with a single space.
 		$name = preg_replace('@[\s]+@', ' ', $name);
@@ -978,6 +994,60 @@
 			$result['status'] = true;
 			return $result;
 		}
+
+		/**
+		 * Download the given NZB local file.
+		 *
+		 * @param $file
+		 * @param $name Name of the file for passing to downloader.
+		 * @return Array containing the output from the downloader, and the status code.
+		 */
+		function downloadFromFile($file, $name = '') {
+			$result['output'] = array();
+			$result['status'] = true;
+			return $result;
+		}
+	}
+
+	/**
+	 * Download an NZB from newzbin directly
+	 *
+	 * @param $nzbid FileID of the nzb to download.
+	 * @param $name Name of the file for passing to downloader.
+	 */
+	function downloadDirect($nzbid, $name = '') {
+		global $config;
+		$ch = curl_init();
+		$data = array('username' => $config['search']['username'], 'password' => $config['search']['password'], 'fileid' => $nzbid);
+		curl_setopt($ch, CURLOPT_URL, 'http://www.newzbin.com/api/dnzb/');
+		curl_setopt($ch, CURLOPT_POST, 1);
+		curl_setopt($ch, CURLOPT_POSTFIELDS, $data);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		$data = curl_exec($ch);
+		$file = tempnam("/tmp", "DNZB.");
+		file_put_contents($file, $data);
+		chmod($file, 0777);
+		downloadFromFile($file, $name);
+		@unlink($file);
+	}
+
+	/**
+	 * Download an NZB from a url
+	 *
+	 * @param $url URL to download.
+	 * @param $name Name of the file for passing to downloader.
+	 */
+	function downloadURL($url, $name = '') {
+		global $config;
+		$ch = curl_init();
+		curl_setopt($ch, CURLOPT_URL, $url);
+		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+		$data = curl_exec($ch);
+		$file = tempnam("/tmp", "DNZB.");
+		file_put_contents($file, $data);
+		chmod($file, 0777);
+		downloadFromFile($file, $name);
+		@unlink($file);
 	}
 	
 	// Include functions.report.php if it exists.

@@ -80,4 +80,18 @@
 			return array('output' => $output, 'status' => true);
 		}
 	}
+
+
+	/**
+	 * Download the given NZB local file.
+	 *
+	 * @param $file
+	 * @param $name
+	 * @return Array containing the output from the downloader, and the status code.
+	 */
+	function downloadFromFile($file, $name = '') {
+		$result['output'] = array();
+		$result['status'] = false;
+		return $result;
+	}
 ?>

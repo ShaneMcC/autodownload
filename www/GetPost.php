@@ -4,11 +4,13 @@
 	
 	$title = 'Downloading';
 	$posts = array();
-
+	$directfilename = "";
+	
 	// Discover what we are downloading and set a nice title.
 	if (isset($_REQUEST['show'])) {
 		$show = unserialize($_REQUEST['show']);
-		$title .= sprintf(' - %s %dx%02d', $show['name'], $show['season'], $show['episode']);
+		$directfilename = sprintf('%s %dx%02d', $show['name'], $show['season'], $show['episode']);
+		$title .= ' - '.$directfilename;
 		
 		if (!hasDownloaded($show['name'], $show['season'], $show['episode'])) {
 			setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
@@ -36,6 +38,18 @@
 		$id = (isset($_REQUEST['nzbid'])) ? $_REQUEST['nzbid'] : $_REQUEST['post'];
 		$subtitle = 'NZB: '.$id;
 		$posts[] = $id;
+
+	// A raw NZB.
+	} else if (isset($_REQUEST['rawid'])) {
+		$id = implode(',', $_REQUEST['rawid']);
+		$subtitle = 'Raw NZB: '.$id;
+		$raws[] = $id;
+
+	// A URL.
+	} else if (isset($_REQUEST['dlurl'])) {
+		$id = $_REQUEST['dlurl'];
+		$subtitle = 'Downloaded NZB: '.$id;
+		$dlurl[] = $id;
 		
 	// Multiple NZBs
 	} else if (isset($_REQUEST['post_list'])) {
@@ -61,7 +75,7 @@
 		
 		$subtitle = 'NZBs: '.$list;
 	}
-	
+
 	head($title, $subtitle);
 	
 	// Slow down the requests (useful for large amounts or to keep in order)
@@ -95,6 +109,42 @@
 
 		echo 'Asking hellahella to download: ', $post, CRLF;
 		$result = downloadNZB($post);
+		print_r($result['output']);
+	}
+
+	for ($a = 0; $a != count($dlurl); $a++) {
+		$post = $dlurl[$a];
+		if ($post == "") { continue; }
+
+		if ($querynumber >= $querysleepcount) {
+			echo CRLF.'---------------------------------------------------------'.CRLF;
+			sleepProgress($config['seriesdownload']['sleeptime'], 1, 'to reduce load on newzbin server');
+			$querynumber = 0;
+			echo '---------------------------------------------------------'.CRLF.CRLF;
+		}
+		flush();
+		$querynumber++;
+
+		echo 'Asking hellahella to download: ', $post, CRLF;
+		$result = downloadURL($post, $directfilename);
+		print_r($result['output']);
+	}
+
+	for ($a = 0; $a != count($raws); $a++) {
+		$post = $raws[$a];
+		if ($post == "") { continue; }
+
+		if ($querynumber >= $querysleepcount) {
+			echo CRLF.'---------------------------------------------------------'.CRLF;
+			sleepProgress($config['seriesdownload']['sleeptime'], 1, 'to reduce load on newzbin server');
+			$querynumber = 0;
+			echo '---------------------------------------------------------'.CRLF.CRLF;
+		}
+		flush();
+		$querynumber++;
+
+		echo 'Asking hellahella to download: ', $post, CRLF;
+		$result = downloadDirect($post, $directfilename);
 		print_r($result['output']);
 	}
 	

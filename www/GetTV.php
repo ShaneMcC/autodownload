@@ -22,6 +22,9 @@
 	$buffer = ob_get_contents();
 	ob_end_clean();
 	echo '-->';
+	if (isset($search->search->actual_search)) {
+		echo 'Actually searched for: <strong>', $search->search->actual_search,'</strong>', EOL;
+	}
 	
 	if (preg_match('@function.file-get-contents</a>]: (.*)  in@U', $buffer, $matches)) {
 		echo 'An error occured loading the search provider: ', $matches[1], EOL;
@@ -52,6 +55,7 @@
 			$category = (string)$item->category;
 			$groups = implode($groups, ', ');
 			$status = (string)$item->status;
+			if (isset($item->raw)) { $raw = true; $status .= ' (RAW)'; } else { $raw = false; }
 			$comments = (int)$item->comments['count'];
 			if ($comments > 0) { $comments .= ' (<a href="'.(string)$item->comments.'">View</a>)'; }
 			
@@ -66,8 +70,13 @@
 			echo '  </tr>'.CRLF;
 			
 			echo '  <tr>'.CRLF;
-			echo '    <th>Groups</th>'.CRLF;
-			echo '    <td colspan=5>', $groups,'</td>'.CRLF;
+			if ($raw) {
+				echo '    <th>Raw Name</th>'.CRLF;
+				echo '    <td colspan=5>', (string)$item->rawname,'</td>'.CRLF;
+			} else {
+				echo '    <th>Groups</th>'.CRLF;
+				echo '    <td colspan=5>', $groups,'</td>'.CRLF;
+			}
 			echo '  </tr>'.CRLF;
 			
 			echo '  <tr>'.CRLF;
@@ -82,10 +91,28 @@
 //			echo '  <tr>'.CRLF;
 //			echo '    <td colspan=6 style="height: 4px; border: 0;"></td>'.CRLF;
 //			echo '  </tr>'.CRLF;
+
+			$nodownload = false;
+			if ($raw) {
+				$id = '';
+				$nodownload = true;
+				if (isset($item->files->file)) {
+					foreach ($item->files->file as $file) {
+						if (!empty($id)) { $id .= '&rawid[]='; }
+						$id .= $file;
+					}
+
+					$nodownload = false;
+				}
+			}
 			
 			echo '  <tr>'.CRLF;
 			echo '    <th>Actions</th>'.CRLF;
-			echo '    <td colspan=5>[<a href="GetPost.php?nzbid=', $id, '&show=', urlencode(serialize($show)),'">Download</a>]</td>'.CRLF;
+			echo '    <td colspan=5>';
+			if (!$nodownload) {
+				echo '[<a href="GetPost.php?'.($raw ? 'rawid[]' : 'nzbid').'=', $id, '&show=', urlencode(serialize($show)),'">Download</a>]';
+			}
+			echo '</td>'.CRLF;
 			echo '  </tr>'.CRLF;
 			echo '</table>'.CRLF;
 			

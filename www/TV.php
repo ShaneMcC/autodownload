@@ -4,9 +4,7 @@
 
 	head('TV Downloader');
 	
-	$diff = strtotime('-0 days') - strtotime('today');
-	
-	$starttime = isset($_REQUEST['day']) ? strtotime($_REQUEST['day']) - $diff : strtotime('yesterday');
+	$starttime = isset($_REQUEST['day']) ? strtotime($_REQUEST['day'] . " 00:00") : strtotime('yesterday');
 	$endtime = $starttime;
 	if (isset($_REQUEST['week'])) {
 		$day = date('d', strtotime('-7 days'));

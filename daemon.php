@@ -559,10 +559,10 @@
 									if (!empty($bestid)) { $bestid .= ','; }
 									$bestid .= $file;
 								}
-								$directfilename = sprintf('%s %dx%02d', $show['name'], $show['season'], $show['episode']);
+								$directfilename = sprintf('%s - %dx%02d - %s', $show['name'], $show['season'], $show['episode'], $show['title']);
 								$result = downloadDirect($bestid, $directfilename);
 							} else {
-								$result = false;
+								$result = array('status' => false, 'output' => 'No files');
 							}
 						} else {
 							$result = downloadNZB($bestid);
@@ -580,6 +580,10 @@
 							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']), $extra)));
 						}
 					} else {
+						$extra = '';
+						if ($config['daemon']['autotv']['showmanage']) {
+							$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']).')';
+						}
 						doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('No downloads found for: %s %dx%02d [%s] %s', $show['name'], $show['season'], $show['episode'], $show['title'], $extra)));
 					}
 				}

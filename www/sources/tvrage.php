@@ -23,7 +23,8 @@
 		$cache = 'Yes ('.time().'/'.date('r', time()).') ['.$savefile.']';
 		$contents = file_get_contents($savefile);
 	}
-	$rss = simplexml_load_string($contents);
+	$rss = @simplexml_load_string($contents);
+	if ($rss === false) { @unlink($savefile); }
 	
 	header("Content-type: text/xml");
 	echo "<?xml version=\"1.0\" encoding=\"UTF-8\" ?>\n";

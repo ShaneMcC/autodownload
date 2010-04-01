@@ -1027,8 +1027,9 @@
 		$file = tempnam("/tmp", "DNZB.");
 		file_put_contents($file, $data);
 		chmod($file, 0777);
-		downloadFromFile($file, $name);
+		$result = downloadFromFile($file, $name);
 		@unlink($file);
+		return $result;
 	}
 
 	/**
@@ -1046,8 +1047,9 @@
 		$file = tempnam("/tmp", "DNZB.");
 		file_put_contents($file, $data);
 		chmod($file, 0777);
-		downloadFromFile($file, $name);
+		$result = downloadFromFile($file, $name);
 		@unlink($file);
+		return $result;
 	}
 	
 	// Include functions.report.php if it exists.

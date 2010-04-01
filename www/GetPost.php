@@ -9,7 +9,7 @@
 	// Discover what we are downloading and set a nice title.
 	if (isset($_REQUEST['show'])) {
 		$show = unserialize($_REQUEST['show']);
-		$directfilename = sprintf('%s %dx%02d', $show['name'], $show['season'], $show['episode']);
+		$directfilename = sprintf('%s - %dx%02d - %s', $show['name'], $show['season'], $show['episode'], $show['title']);
 		$title .= ' - '.$directfilename;
 		
 		if (!hasDownloaded($show['name'], $show['season'], $show['episode'])) {

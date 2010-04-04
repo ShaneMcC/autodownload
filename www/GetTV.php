@@ -1,8 +1,8 @@
 <?php
 	include_once(dirname(__FILE__).'/../config.php');
 	include_once(dirname(__FILE__).'/../functions.php');
-	if (isset($_REQUEST['is']) && is_array($_REQUEST[$_REQUEST['is']])) {
-		$_REQUEST['info'] = implode($_REQUEST[$_REQUEST['is']], '');
+	if (isset($_REQUEST['@info']) && is_array($_REQUEST[$_REQUEST['@info']])) {
+		$_REQUEST['info'] = implode($_REQUEST[$_REQUEST['@info']], '');
 	}
 	$show = unserialize($_REQUEST['info']);
 
@@ -109,8 +109,8 @@
 			echo '  <tr>'.CRLF;
 			echo '    <th>Actions</th>'.CRLF;
 			echo '    <td colspan=5>';
-			if (!$nodownload) {
-				echo '[<a href="GetPost.php?'.($raw ? 'rawid[]' : 'nzbid').'=', $id, '&show=', urlencode(serialize($show)),'">Download</a>]';
+			if (!$nodownload) { 
+				echo '[<a href="GetPost.php?'.($raw ? 'rawid[]' : 'nzbid').'=', $id, '&', GetLink($show, 512, 'show'), '">Download</a>]';
 			}
 			echo '</td>'.CRLF;
 			echo '  </tr>'.CRLF;

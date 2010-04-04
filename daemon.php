@@ -546,6 +546,10 @@
 					doPrintR($items);
 					$optimal = GetBestOptimal($search->xpath('item'), $info['size'], false, true, $show);
 					// If a best item was found
+						$extra = '';
+						if ($config['daemon']['autotv']['showmanage']) {
+							$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']).')';
+						}
 					if (count(items) > 0 && $optimal != -1) {
 						$best = $items[$optimal];
 						$bestid = (int)$best->nzbid;
@@ -573,17 +577,11 @@
 						if ($result['status']) {
 							// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
 							setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
-							$extra = '';
-							if ($config['daemon']['autotv']['showmanage']) {
-								$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']).')';
-							}
 							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']), $extra)));
+						} else {
+							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Failed to start automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']), $extra)));
 						}
 					} else {
-						$extra = '';
-						if ($config['daemon']['autotv']['showmanage']) {
-							$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']).')';
-						}
 						doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('No downloads found for: %s %dx%02d [%s] %s', $show['name'], $show['season'], $show['episode'], $show['title'], $extra)));
 					}
 				}

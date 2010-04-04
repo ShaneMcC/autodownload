@@ -34,6 +34,7 @@
 		}
 	}
 	
+	
 	/**
 	 * Print a basic html page-footer.
 	 *
@@ -154,6 +155,39 @@
 			}
 		} else {
 			return $text;
+		}
+	}
+
+	/**
+	 * Serialise the given variable, and split it over multiple request parameters
+	 * to get round a limit in the length of a get param. (Suhosin only allows
+	 * 512 chars).
+	 * The GET-limit still applies.
+	 *
+	 * @param $show The variable to serialise
+	 * @param $limit (Default = 512) Limit of length (This needs to be at least 3,
+	 *               as for safety each variable will be no more than (limit - 2)
+	 *               in length.
+	 * @param $name (Default = 'info') Name of the variable that the other side is
+	 *              expecting. If this is being sent as an array then we will
+	 *              prepend this with an "@" and set its value to the name of the
+	 *              array variables.
+	 * @param $varname (Default = 'i') Name of the array that will actually be
+	 *                 sent
+	 */
+	function getLink($show, $limit = 512, $name = 'info', $varname = 'i') {
+		$result = serialize($show);
+		if (strlen($result) < $limit) {
+			return $name . '=' . urlencode($result);
+		} else {
+			// Split it.
+			$bits = explode("\n", chunk_split($result, ($limit - 2), "\n"));
+			$result = '@'.$name.'='.urlencode($varname);
+			$i = 1;
+			foreach ($bits as $bit) {
+				$result .= '&'.$varname.'['.($i++).']='.urlencode($bit);
+			}
+			return $result;
 		}
 	}
 	
@@ -425,8 +459,10 @@
 
 		if (!$result) {
 			if ($info != null) {
+				// echo "(", cleanName($info['name'], false, false), " == ", cleanName($show['name'], false, false), ");", "\n";
 				$result = (cleanName($info['name'], false, false) == cleanName($show['name'], false, false));
 			} else {
+				// echo "(", $searchresult, " == ", cleanName(getSearchString($show, $show['info'], false), false, false), ");", "\n";
 				$result = ($searchresult == cleanName(getSearchString($show, $show['info'], false), false, false));
 			}
 		}
@@ -452,12 +488,15 @@
 		// replace any .s or _s that were used in place of spaces, with spaces.
 		$name = preg_replace('@([a-zA-Z0-9])\.([a-zA-Z0-9])@', '\1 \2', $name);
 		
-		// Replace any non alphanumerics or some special characters with spaces.
-		$name = preg_replace('@[^a-zA-Z0-9\(\):\']@', ' ', $name);
+		// If $nonAlphaNumeric is true, then allow alphanumeric and some exceptions
+		// replace non-alpha numeric with spaces.
+		if ($nonAlphaNumeric) {
+			// Replace any non alphanumerics or some special characters with spaces.
+			$name = preg_replace('@[^a-zA-Z0-9\(\):\']@', ' ', $name);
 		
-		// If $nonAlphaNumeric is false, then only allow alphanumeric.
-		if (!$nonAlphaNumeric) {
-			$name = preg_replace('@[^a-zA-Z0-9]@', ' ', $name);
+		// If $nonAlphaNumeric is false, then only allow alphanumeric, remove anything else.
+		} else if (!$nonAlphaNumeric) {
+			$name = preg_replace('@[^a-zA-Z0-9\s]@', '', $name);
 		}
 		
 		// Replace multiple spaces in a row with a single space.

@@ -20,22 +20,6 @@
 		$starttime = strtotime($month.'/'.$day.'/'.$year);
 	}
 
-	function getLink($show) {
-		$result = serialize($show);
-		if (strlen($result) < 512) {
-			return 'info=' . urlencode($result);
-		} else {
-			// Split it.
-			$bits = explode("\n", chunk_split($result, 510, "\n"));
-			$result = 'is=i';
-			$i = 1;
-			foreach ($bits as $bit) {
-				$result .= '&i['.($i++).']='.urlencode($bit);
-			}
-			return $result;
-		}
-	}
-	
 	echo '<pre>';
 	if ($starttime != $endtime) {
 		echo 'Listing shows aired between: <strong>', date('r', $starttime), '</strong> and <strong>', date('r', $endtime), '</strong>', CRLF;

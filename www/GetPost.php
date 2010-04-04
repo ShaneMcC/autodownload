@@ -1,11 +1,15 @@
 <?php
 	include_once(dirname(__FILE__).'/../config.php');
 	include_once(dirname(__FILE__).'/../functions.php');
+
+	if (isset($_REQUEST['@show']) && is_array($_REQUEST[$_REQUEST['@show']])) {
+		$_REQUEST['show'] = implode($_REQUEST[$_REQUEST['@show']], '');
+	}
 	
 	$title = 'Downloading';
 	$posts = array();
 	$directfilename = "";
-	
+
 	// Discover what we are downloading and set a nice title.
 	if (isset($_REQUEST['show'])) {
 		$show = unserialize($_REQUEST['show']);
@@ -25,7 +29,7 @@
 		}
 		doReport(array('source' => 'GetPost', 'message' => sprintf('Beginning manual download of: %s %dx%02d [%s] (NZB: %d)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $_REQUEST['nzbid'], $extra)));
 	}
-	
+
 	// URL to newzbin page.
 	if (isset($_REQUEST['nzb'])) {
 		$pattern = '@(.*)/browse/post/([0-9]+).*@i'; preg_match($pattern, $_REQUEST['nzb'], $matches);

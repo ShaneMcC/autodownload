@@ -163,19 +163,34 @@
 	// This provider should give search results in XML like so:
 	// <nzb>
 	//     <item>
-	//         <nzbid>12345</nzbid>
-	//         <name>Example Entry</name>
-	//         <sizemb>400</sizemb>
-	//         <category>TV</category>
-	//         <group>alt.bin.example1</group>
+	//         <nzbid>12345</nzbid>             <!-- ID for this item. -->
+	//         <name>Example Entry</name>       <!-- Name for this item. -->
+	//         <sizemb>400</sizemb>             <!-- Size of this item in MB. -->
+	//         <category>TV</category>          <!-- Optional Category. -->
+	//         <group>alt.bin.example1</group>  <!-- Optional Groups. -->
 	//         <group>alt.bin.example2</group>
-	//         <status>Completed<status>
-	//         <comments count="0">http://v3.newzbin.com/browse/post/12345/comments/</comments>
+	//         <raw />                          <!-- Does this actually represent a raw view from newzbin? -->
+	//         <files>                          <!-- List of file IDs that are part of this item -->
+	//             <file>123456780</file>       <!-- If these are provided, then we will download -->
+	//             <file>123456781</file>       <!-- an NZB made up of these files, rather than -->
+	//             <file>123456782</file>       <!-- using the nzbid field. -->
+	//             ...
+	//             <file>123456788</file>
+	//             <file>123456789</file>
+	//         </files>
+	//         <status>Completed<status>        <!-- Optional status information. -->
+	//         <comments count="0">http://v3.newzbin.com/browse/post/12345/comments/</comments>      <!-- Optional comment information. -->
 	//     </item>
 	//     <item>
 	//         ...
 	//     </item>
 	// </nzb>
+	//
+	// If files are included, they will be given priority over the nzbid.
+	// Name and Size will be used to see if this is a good match and are required.
+	// nzbid is required, even if it is not actually what will be downloaded.
+	// <raw /> is not required, but will allow GetTV.php to make it obvious that
+	// the search is from RAW view.
 	//
 	// It also needs to accept some or all of the parameters below:
 	//  * search - The string to search for, this is required.
@@ -184,7 +199,7 @@
 	//  * limit - How many results to return. Not required, just return all.
 	//  * sizesort - Specifies sort order of results. Preferably small to large
 	//               to make viewing on GetTV.php less random-looking. Optional
-	$config['search']['provider'] = 'http://localhost/new/nzb/search.php';
+	$config['search']['provider'] = 'http://localhost/new/nzb/api.php';
 	// Username for searching (if needed)
 	$config['search']['username'] = 'unknown';
 	// Password for searching (if needed)

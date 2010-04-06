@@ -210,9 +210,9 @@
 		$url .= '&sizesort';
 		$url .= '&limit=100';
 		$url .= '&search='.urlencode($searchTerm);
-		
+
 		$page = file_get_contents($url);
-		
+
 		if ($debug) { echo '<pre>'.htmlspecialchars($page).'</pre>'; }
 		return ($page === false) ? false : simplexml_load_string($page);
 	}

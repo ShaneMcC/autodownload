@@ -17,6 +17,12 @@
 	//  - Unregognised parameters/values are retained (in order)
 	//  - "help text" can be generated using showCLIParams()
 	//----------------------------------------------------------------------------
+
+	/** Default forked state. */
+	$__daemontools['forked'] = false;
+
+	/** Default force_echo state. */
+	$__daemontools['force_echo'] = false;
 	
 	/**
 	 * Used to let the application know that this is a call from inside the loop.

@@ -86,7 +86,7 @@
 	$config['daemon']['reindex']['usefilepatterns'] = false;
 	
 	// File extentions that we care about when reindexing.
-	$config['daemon']['reindex']['extentions'] = array('avi', 'mkv', 'mpg', 'mpeg', 'flv');
+	$config['daemon']['reindex']['extentions'] = array('avi', 'mkv', 'mpg', 'mpeg', 'flv', 'ts');
 	// If any of the words in this array are in the file name we ignore it even if
 	// its file extention is one of the above.
 	$config['daemon']['reindex']['badfile'] = array('sample');
@@ -243,6 +243,8 @@
 	$config['default']['attributes'] = 'Attr:Language=English';
 	// What should be considered the default sources if none are specified?
 	$config['default']['sources'] = '!tvrage_britain';
+	// Default dirname
+	$config['default']['dirname'] = 'Watched';
 	
 	//----------------------------------------------------------------------------
 	// Download Modifiers

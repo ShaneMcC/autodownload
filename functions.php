@@ -906,14 +906,14 @@
 		global $config;
 		
 		// Apply defaults if nothing special is specified
-		$info['searchstring'] = ($info['searchstring'] == null || empty($info['searchstring'])) ? $config['default']['searchstring'] : $info['searchstring'];
-		$info['dirname'] = ($info['dirname'] == null || empty($info['dirname'])) ? $config['default']['dirname'] : $info['dirname'];
-		$info['attributes'] = ($info['attributes'] == null || empty($info['attributes'])) ? $config['default']['attributes'] : $info['attributes'];
-		$info['sources'] = ($info['sources'] == null || empty($info['sources'])) ? $config['default']['sources'] : $info['sources'];
+		$info['searchstring'] = (!isset($info['searchstring']) || $info['searchstring'] == null || empty($info['searchstring'])) ? $config['default']['searchstring'] : $info['searchstring'];
+		$info['dirname'] = (!isset($info['dirname']) || $info['dirname'] == null || empty($info['dirname'])) ? $config['default']['dirname'] : $info['dirname'];
+		$info['attributes'] = (!isset($info['attributes']) || $info['attributes'] == null || empty($info['attributes'])) ? $config['default']['attributes'] : $info['attributes'];
+		$info['sources'] = (!isset($info['sources']) || $info['sources'] == null || empty($info['sources'])) ? $config['default']['sources'] : $info['sources'];
 		
 		// Make sure automatic and important are booleans
-		if ($info['automatic'] !== true && $info['automatic'] !== false) { $info['automatic'] = (strtolower($info['automatic']) == 'true'); }
-		if ($info['important'] !== true && $info['important'] !== false) { $info['important'] = (strtolower($info['important']) == 'true'); }
+		if (!isset($info['automatic']) || ($info['automatic'] !== true && $info['automatic'] !== false)) { $info['automatic'] = (strtolower($info['automatic']) == 'true'); }
+		if (!isset($info['important']) || ($info['important'] !== true && $info['important'] !== false)) { $info['important'] = (strtolower($info['important']) == 'true'); }
 		
 		// Double the optimal size if using highdef.
 		if ($config['download']['highdef']) {

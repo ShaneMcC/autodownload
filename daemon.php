@@ -624,6 +624,6 @@
 	
 	// Start the daemon so that it loops every few seconds seconds.
 	if ($daemonise) {
-		startDaemon($pid, $fork, doDaemonLoop, ($config['daemon']['looptime'] * 1000), __FILE__);
+		startDaemon($pid, $fork, 'doDaemonLoop', ($config['daemon']['looptime'] * 1000), __FILE__);
 	}
 ?>

@@ -80,6 +80,15 @@
 		$subtitle = 'NZBs: '.$list;
 	}
 
+	if (isset($_REQUEST['nzbtype'])) {
+		$subtitle .= ' ['.$_REQUEST['nzbtype'].']';
+		if ($nzbtype != 'newzbin') {
+			$nzbtype = '_' . $_REQUEST['nzbtype'];
+		}
+	} else {
+		$nzbtype = '';
+	}
+
 	head($title, $subtitle);
 	
 	// Slow down the requests (useful for large amounts or to keep in order)
@@ -95,7 +104,7 @@
 		echo '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'.CRLF.CRLF;
 		echo '</pre>';
 	}
-	
+
 	echo "<pre>";
 	$querynumber = 0;
 	for ($a = 0; $a != count($posts); $a++) {
@@ -112,8 +121,8 @@
 		$querynumber++;
 
 		echo 'Asking hellahella to download: ', $post, CRLF;
-		$result = downloadNZB($post);
-		print_r($result['output']);
+		$result = call_user_func('downloadNZB'.$nzbtype, $post, $directfilename);
+		var_dump($result['output']);
 	}
 
 	for ($a = 0; $a != count($dlurl); $a++) {
@@ -130,8 +139,8 @@
 		$querynumber++;
 
 		echo 'Asking hellahella to download: ', $post, CRLF;
-		$result = downloadURL($post, $directfilename);
-		print_r($result['output']);
+		$result = call_user_func('downloadURL'.$nzbtype, $post, $directfilename);
+		var_dump($result['output']);
 	}
 
 	for ($a = 0; $a != count($raws); $a++) {
@@ -148,8 +157,8 @@
 		$querynumber++;
 
 		echo 'Asking hellahella to download: ', $post, CRLF;
-		$result = downloadDirect($post, $directfilename);
-		print_r($result['output']);
+		$result = call_user_func('downloadDirect'.$nzbtype, $post, $directfilename);
+		var_dump($result['output']);
 	}
 	
 	echo "</pre>";

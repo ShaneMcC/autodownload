@@ -141,14 +141,15 @@
 		}
 
 		$nzbid = (int)$bits[0];
-
-		echo "\t".'<item>'.CRLF;
-		echo "\t\t".'<nzbid>'.$nzbid.'</nzbid>'.CRLF;
-		echo "\t\t".'<name>'.htmlspecialchars($bits[2]).'</name>'.CRLF;
-		echo "\t\t".'<sizemb calculated="'.$mbcalc.'">'.$sizemb.'</sizemb>'.CRLF;
-		echo "\t\t".'<url>http://v3.newzbin.com/browse/post/'.$nzbid.'/</url>'.CRLF;
-		echo "\t\t".'<reportinfo url="http://v3.newzbin.com/backend/reportinfo/'.$nzbid.'" />'.CRLF;
-		echo "\t".'</item>'.CRLF;
+		if ($nzbid > 0) {
+			echo "\t".'<item>'.CRLF;
+			echo "\t\t".'<nzbid>'.$nzbid.'</nzbid>'.CRLF;
+			echo "\t\t".'<name>'.htmlspecialchars($bits[2]).'</name>'.CRLF;
+			echo "\t\t".'<sizemb calculated="'.$mbcalc.'">'.$sizemb.'</sizemb>'.CRLF;
+			echo "\t\t".'<url>http://v3.newzbin.com/browse/post/'.$nzbid.'/</url>'.CRLF;
+			echo "\t\t".'<reportinfo url="http://v3.newzbin.com/backend/reportinfo/'.$nzbid.'" />'.CRLF;
+			echo "\t".'</item>'.CRLF;
+		}
 	}
 
 	die('</nzb>'.CRLF);

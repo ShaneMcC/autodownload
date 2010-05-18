@@ -553,9 +553,21 @@
 					if (count(items) > 0 && $optimal != -1) {
 						$best = $items[$optimal];
 						$bestid = (int)$best->nzbid;
+
+						if (isset($best->nzbtype)) {
+							if ($nzbtype != 'newzbin') {
+								$nzbtype = '_' . $best->nzbtype;
+							}
+						} else {
+							$nzbtype = '';
+						}
+						
 						doEcho('Optimal: ', $optimal, CRLF);
 						doEcho('Best: ', $bestid, CRLF);
+						doEcho('NZB Type: ', (empty($nzbtype) ? 'newzbin' : substr($nzbtype, 1)), CRLF);
+						
 						// Try to download.
+						$directfilename = sprintf('%s - %dx%02d - %s', $show['name'], $show['season'], $show['episode'], $show['title']);
 						if (isset($best->raw)) {
 							if (isset($best->files->file)) {
 								$bestid = '';
@@ -563,13 +575,12 @@
 									if (!empty($bestid)) { $bestid .= ','; }
 									$bestid .= $file;
 								}
-								$directfilename = sprintf('%s - %dx%02d - %s', $show['name'], $show['season'], $show['episode'], $show['title']);
-								$result = downloadDirect($bestid, $directfilename);
+								$result = call_user_func('downloadDirect'.$nzbtype, $bestid, $directfilename);
 							} else {
 								$result = array('status' => false, 'output' => 'No files');
 							}
 						} else {
-							$result = downloadNZB($bestid);
+							$result = call_user_func('downloadNZB'.$nzbtype, $bestid, $directfilename);
 						}
 						
 						doEcho('Result: ');

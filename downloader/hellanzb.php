@@ -57,9 +57,10 @@
 	 * Download the given NZB.
 	 *
 	 * @param $nzbid
+	 * @param $name Optional name to pass
 	 * @return Array containing the output from the downloader, and the status code.
 	 */
-	function downloadNZB($nzbid) {
+	function downloadNZB($nzbid, $name = '') {
 		global $config;
 
 		$file = file_get_contents($config['downloader']['hellanzb']['config']);

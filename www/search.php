@@ -1,24 +1,64 @@
 <?php
 	include_once(dirname(__FILE__).'/../config.php');
 	include_once(dirname(__FILE__).'/../functions.php');
-	if (isset($_REQUEST['@info']) && is_array($_REQUEST[$_REQUEST['@info']])) {
-		$_REQUEST['info'] = implode($_REQUEST[$_REQUEST['@info']], '');
-	}
-	$show = unserialize($_REQUEST['info']);
 
-	head(sprintf('TV Downloader - %s %dx%02d', $show['name'], $show['season'], $show['episode']), '', getCSS(true, false));
-	
-	$info = (is_array($show['info'])) ? $show['info'] : getShowInfo($show['name']);
-	
-	$searchString = getSearchString($show, $info);
-	
+	head('NZB Finder', '', getCSS(true, false));
+
+	echo '          <form method="GET" action="">', CRLF;
+	echo '                  <div class="center">', CRLF;
+	echo '                          <div class="formrow">', CRLF;
+	echo '                                  <span class="labelmed">Search query (May not be blank):</span>', CRLF;
+	echo '                                  <span class="inputreg"><input name="search" size=25></span>', CRLF;
+	echo '                          </div>', CRLF;
+	echo '                          <div class="formrow">', CRLF;
+	echo '                                  <span class="labelmed">&nbsp;</span>', CRLF;
+	echo '                                  <span class="inputreg"><input class="submit" type="Submit" value="Search"></span>', CRLF;
+	echo '                          </div>', CRLF;
+	echo '                  </div>', CRLF;
+	echo '          </form>', CRLF;
+	echo '          <br><br>', CRLF;
+	if (!isset($_REQUEST['search'])) {
+		die();
+	}
+
+	$searchString = $_REQUEST['search'];
+
 	echo 'Searching for: <strong>', $searchString,'</strong>', EOL;
-	echo 'Optimal Size: <strong>', $info['size'],'mb</strong>', EOL;
+
+	$providers['api'] = 'http://localhost/new/nzb/api.php';
+	$providers['nzbmatrix'] = 'http://localhost/new/nzb/nzbmatrix.php';
+	$providers['nzbmatrix_search'] = 'http://localhost/new/nzb/nzbmatrix_search.php';
+	$providers['raw'] = 'http://localhost/new/nzb/raw.php';
+	$providers['search'] = 'http://localhost/new/nzb/search.php';
+	$providers['scraper'] = 'http://localhost/new/nzb/index.php';
+	$providers['config default'] = null;
+// 
+	$default = 'config default';
+	foreach ($providers as $name => $provider) {
+		if ($provider == $config['search']['provider']) {
+			$default = $name;
+		}
+	}
+
+	if ($default != 'config default') { unset($providers['config default']); }
+	
+	$providerapi = isset($_REQUEST['api']) ? $_REQUEST['api'] : $default;
+	
+	echo '<ul>';
+	foreach ($providers as $name => $provider) {
+		echo '<li>';
+		if ($providerapi != $name) { echo '<a href="'.$_SERVER['PHP_SELF'].'?api='.$name.'&search='.urlencode(unslash($_REQUEST['search'])).'">'; } else { echo '<strong>'; }
+		echo $name;
+		if ($providerapi != $name) { echo '</a>'; } else { echo '</strong>'; }
+		echo '</li>';
+	}
+	echo '</ul>';
+	
 	echo EOL;
 	
 	echo '<!--';
 	ob_start();
-	$search = searchFor($searchString, true);
+	$search = searchFor($searchString, true, $providers[$providerapi]);
 	$buffer = ob_get_contents();
 	ob_end_clean();
 	echo '-->';
@@ -56,11 +96,11 @@
 			$groups = implode($groups, ', ');
 			$status = (string)$item->status;
 			if (isset($item->raw)) { $raw = true; $status .= ' (RAW)'; } else { $raw = false; }
-			if (isset($item->nzbtype)) { $nzbtype = (string)$item->nzbtype; } else { $nzbtype = ''; }
 			$comments = (int)$item->comments['count'];
 			if ($comments > 0) { $comments .= ' (<a href="'.(string)$item->comments.'">View</a>)'; }
 			
-			$class = 'downloadList' . ($best ? ' best' : '') . (!isGoodMatch((string)$item->name, $show) ? ' bad' : '');
+//			$class = 'downloadList' . ($best ? ' best' : '') . (!isGoodMatch((string)$item->name, $show) ? ' bad' : '');
+			$class = 'downloadList';
 			
 			echo '<table class="'.$class.'" id="nzb_', $id, '">'.CRLF;
 			echo '  <tr>'.CRLF;
@@ -71,27 +111,22 @@
 			echo '  </tr>'.CRLF;
 			
 			echo '  <tr>'.CRLF;
-			echo '    <th>Groups</th>'.CRLF;
-			echo '    <td colspan=5>', $groups,'</td>'.CRLF;
-			echo '  </tr>'.CRLF;
-
-			if (isset($item->rawname)) {
+			if ($raw) {
 				echo '    <th>Raw Name</th>'.CRLF;
 				echo '    <td colspan=5>', (string)$item->rawname,'</td>'.CRLF;
+			} else {
+				echo '    <th>Groups</th>'.CRLF;
+				echo '    <td colspan=5>', $groups,'</td>'.CRLF;
 			}
+			echo '  </tr>'.CRLF;
 			
 			echo '  <tr>'.CRLF;
 			echo '    <th>Status</th>'.CRLF;
 			echo '    <td>', $status,'</td>'.CRLF;
 			echo '    <th>Comments</th>'.CRLF;
 			echo '    <td>', $comments,'</td>'.CRLF;
-			if (!empty($category)) {
-				echo '    <th>Category</th>'.CRLF;
-				echo '    <td>', $category,'</td>'.CRLF;
-			} else {
-				echo '    <th>NZBType</th>'.CRLF;
-				echo '    <td>', $nzbtype,'</td>'.CRLF;
-			}
+			echo '    <th>Category</th>'.CRLF;
+			echo '    <td>', $category,'</td>'.CRLF;
 			echo '  </tr>'.CRLF;
 			
 //			echo '  <tr>'.CRLF;
@@ -116,8 +151,9 @@
 			echo '    <th>Actions</th>'.CRLF;
 			echo '    <td colspan=5>';
 			if (!$nodownload) { 
-				echo '[<a href="GetPost.php?', ($raw ? 'rawid[]' : 'nzbid'), '=', $id, '&', (!empty($nzbtype) ? 'nzbtype='.$nzbtype : ''), '&', GetLink($show, 512, 'show'), '">Download</a>]';
+				echo '[<a href="GetPost.php?'.($raw ? 'rawid[]' : 'nzbid').'=', $id, '&title=', urlencode($name) , '">Download</a>] - ';
 			}
+			echo '[<a href="https://www.newzbin.com/browse/post/', $id, '">View Post</a>]';
 			echo '</td>'.CRLF;
 			echo '  </tr>'.CRLF;
 			echo '</table>'.CRLF;

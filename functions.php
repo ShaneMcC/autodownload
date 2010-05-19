@@ -251,7 +251,7 @@
 	 * @param $forcereload (Default = false) Should the source clear its cache?
 	 * @param $source (Default = '') Source to use. If blank, the default source
 	 *                specified in the config is used.
-	 * @param $source (Default = '') Some sources allow an extra param to be
+	 * @param $extra (Default = '') Some sources allow an extra param to be
 	 *                passed to them, give that here.
 	 * @return simplexml object representing all the TV the source knows about.
 	 */
@@ -267,7 +267,7 @@
 		
 		$page = file_get_contents($url);
 		
-		if ($debug) { echo '<pre>'.htmlspecialchars($page).'</pre>'; }
+		// if ($debug) { echo '<pre>'.htmlspecialchars($page).'</pre>'; }
 		return simplexml_load_string($page);
 	}
 	

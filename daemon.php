@@ -379,112 +379,118 @@
 		// The var names in the config are huge, make them nicer for use here.
 		$basedir = $config['daemon']['reindex']['basedir'];
 		$dirs = $config['daemon']['reindex']['dirs'];
-		$downloaddir = $config['daemon']['reindex']['downloaddir'];
+		$downloaddirs = $config['daemon']['reindex']['downloaddir'];
 		$folderpatterns = $config['daemon']['reindex']['dirpatterns'];
 		$filepatterns = $config['daemon']['reindex']['filepatterns'];
 		$extentions = $config['daemon']['reindex']['extentions'];
 		$badfiles = $config['daemon']['reindex']['badfile'];
 		$usedirnames = $config['daemon']['reindex']['usedirnames'];
 		$symlinkwatched = $config['daemon']['reindex']['symlinkwatched'];
-		
-		// Get a listing of the directory
-		$dirlist = directoryToArray($downloaddir, false, false);
-		foreach ($dirlist as $dir) {
-			// Check if this is actually a directory.
-			if (isset($dir['contents'])) {
-				$deleteDir = false;
-				// Check if it matches any of the patterns.
-				$folderinfo = getEpisodeInfo($folderpatterns, $dir['name']);
-				$hasGood = false;
-				$goodcount = 0;
-				if ($folderinfo != null) {
-					// Print them.
-					doEcho('-------------------------------------------------------',CRLF);
-					doEcho('Found Downloaded show that matches pattern: ', $folderinfo['pattern'], CRLF, CRLF);
-					doEcho('Name: ', $folderinfo['name'], CRLF);
-					doEcho('Season: ', $folderinfo['season'], CRLF);
-					doEcho('Episode: ', $folderinfo['episode'], CRLF);
-					doEcho('Title: ', $folderinfo['title'], CRLF);
-					doEcho('-------------------------------------------------------',CRLF);
-					
-					// Look at all the files inside this directory.
-					$files = directoryToArray($downloaddir.'/'.$dir['name'], false, false);
-					foreach ($files as $file) {
-						if (isset($file['contents'])) { continue; }
-						
-						doEcho("\t", $file['name'], CRLF);
-						$filename = explode('.', $file['name']);
-						$fileext = strtolower(array_pop($filename));
-						$filename = implode('.', $filename);
-						
-						// Check if this file has a good file extention
-						if (in_array($fileext, $extentions)) {
-							// Check that its not a "bad" file
-							foreach ($badfiles as $badfile) {
-								if (stristr($file['name'], $badfile)) { continue 2; }
-							}
-							
-							doEcho("\t\t", 'Found good file: ', $file['name'], CRLF);
-							$hasGood = true;
-							$goodcount++;
-							$info = null;
-							if ($folderinfo['usefilepattern']) {
-								$info = getEpisodeInfo($filepatterns, $file['name']);
-							}
-							if ($info == null) { $info = $folderinfo; }
-							if ($usedirnames || $symlinkwatched) {
-								if ($usedirnames) {
-									$dirname = (isset($showinfo['dirname']) && in_array($showinfo['dirname'], $dirs)) ? $showinfo['dirname'] : $dirs[0];
-								} elseif ($symlinkwatched) {
-									$dirname = $dirs[1];
+
+		if (!is_array($downloaddirs)) {
+			$downloaddirs = array($downloaddirs);
+		}
+
+		foreach ($downloaddirs as $downloaddir) {
+			// Get a listing of the directory
+			$dirlist = directoryToArray($downloaddir, false, false);
+			foreach ($dirlist as $dir) {
+				// Check if this is actually a directory.
+				if (isset($dir['contents'])) {
+					$deleteDir = false;
+					// Check if it matches any of the patterns.
+					$folderinfo = getEpisodeInfo($folderpatterns, $dir['name']);
+					$hasGood = false;
+					$goodcount = 0;
+					if ($folderinfo != null) {
+						// Print them.
+						doEcho('-------------------------------------------------------',CRLF);
+						doEcho('Found Downloaded show that matches pattern: ', $folderinfo['pattern'], CRLF, CRLF);
+						doEcho('Name: ', $folderinfo['name'], CRLF);
+						doEcho('Season: ', $folderinfo['season'], CRLF);
+						doEcho('Episode: ', $folderinfo['episode'], CRLF);
+						doEcho('Title: ', $folderinfo['title'], CRLF);
+						doEcho('-------------------------------------------------------',CRLF);
+
+						// Look at all the files inside this directory.
+						$files = directoryToArray($downloaddir.'/'.$dir['name'], false, false);
+						foreach ($files as $file) {
+							if (isset($file['contents'])) { continue; }
+
+							doEcho("\t", $file['name'], CRLF);
+							$filename = explode('.', $file['name']);
+							$fileext = strtolower(array_pop($filename));
+							$filename = implode('.', $filename);
+
+							// Check if this file has a good file extention
+							if (in_array($fileext, $extentions)) {
+								// Check that its not a "bad" file
+								foreach ($badfiles as $badfile) {
+									if (stristr($file['name'], $badfile)) { continue 2; }
 								}
-								$targetdir = sprintf('%s/%s/%s/Season %d', $basedir, $dirname, $info['name'], $info['season']);
-								$linkdir = sprintf('%s/%s', $basedir, $dirs[0]);
-							} else {
-								$targetdir = sprintf('%s/%s', $basedir, $dirs[0]);
-							}
-							$targetname = sprintf('%s %dx%02d.%s', $info['name'], $info['season'], $info['episode'], $fileext);
-							
-							if ($config['daemon']['reindex']['ignore0x00'] && (int)$info['season'] == 0 && (int)$info['episode'] == 0) {
-								doEcho('Epsiode appears to be 0x00, ignoring.', CRLF);
-								continue;
-							}
-							
-							// Make sure the target directory exists
-							if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
-							
-							// Get the full target/source names
-							$source = preg_replace('@//@si', '/', $downloaddir.'/'.$dir['name'].'/'.$file['name']);
-							$dest = getDestFile(preg_replace('@//@si', '/', $targetdir.'/'.$targetname));
-							
-							doEcho("\t\t", 'Moving from: ', $source, CRLF);
-							doEcho("\t\t", 'Moving to: ', $dest, CRLF);
-							
-							$extra = '';
-							if ($config['daemon']['autotv']['showmanage']) {
-								$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($info['name']).')';
-							}
-							doReport(array('source' => 'daemon::handleReindex', 'message' => sprintf('Download Completed: %s %dx%02d%s', $info['name'], $info['season'], $info['episode'], $extra)));
-							
-							// Move it.
-							if (rename($source, $dest)) {
-								$goodcount--;
-							}
-							if ($symlinkwatched) {
-								$link = getDestFile(preg_replace('@//@si', '/', $linkdir.'/'.$targetname));
-								doEcho("\t\t", 'Linking to: ', $link, CRLF);
-								symlink($dest, $link);
+
+								doEcho("\t\t", 'Found good file: ', $file['name'], CRLF);
+								$hasGood = true;
+								$goodcount++;
+								$info = null;
+								if ($folderinfo['usefilepattern']) {
+									$info = getEpisodeInfo($filepatterns, $file['name']);
+								}
+								if ($info == null) { $info = $folderinfo; }
+								if ($usedirnames || $symlinkwatched) {
+									if ($usedirnames) {
+										$dirname = (isset($showinfo['dirname']) && in_array($showinfo['dirname'], $dirs)) ? $showinfo['dirname'] : $dirs[0];
+									} elseif ($symlinkwatched) {
+										$dirname = $dirs[1];
+									}
+									$targetdir = sprintf('%s/%s/%s/Season %d', $basedir, $dirname, $info['name'], $info['season']);
+									$linkdir = sprintf('%s/%s', $basedir, $dirs[0]);
+								} else {
+									$targetdir = sprintf('%s/%s', $basedir, $dirs[0]);
+								}
+								$targetname = sprintf('%s %dx%02d.%s', $info['name'], $info['season'], $info['episode'], $fileext);
+
+								if ($config['daemon']['reindex']['ignore0x00'] && (int)$info['season'] == 0 && (int)$info['episode'] == 0) {
+									doEcho('Epsiode appears to be 0x00, ignoring.', CRLF);
+									continue;
+								}
+
+								// Make sure the target directory exists
+								if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
+
+								// Get the full target/source names
+								$source = preg_replace('@//@si', '/', $downloaddir.'/'.$dir['name'].'/'.$file['name']);
+								$dest = getDestFile(preg_replace('@//@si', '/', $targetdir.'/'.$targetname));
+
+								doEcho("\t\t", 'Moving from: ', $source, CRLF);
+								doEcho("\t\t", 'Moving to: ', $dest, CRLF);
+
+								$extra = '';
+								if ($config['daemon']['autotv']['showmanage']) {
+									$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($info['name']).')';
+								}
+								doReport(array('source' => 'daemon::handleReindex', 'message' => sprintf('Download Completed: %s %dx%02d%s', $info['name'], $info['season'], $info['episode'], $extra)));
+
+								// Move it.
+								if (rename($source, $dest)) {
+									$goodcount--;
+								}
+								if ($symlinkwatched) {
+									$link = getDestFile(preg_replace('@//@si', '/', $linkdir.'/'.$targetname));
+									doEcho("\t\t", 'Linking to: ', $link, CRLF);
+									symlink($dest, $link);
+								}
 							}
 						}
 					}
-				}
-				
-				// If the dir had any good files in it, and all of them were moved, then
-				// we can delete the dir.
-				if ($hasGood && $goodcount == 0) {
-					$dirname = preg_replace('@//@si', '/', $downloaddir.'/'.$dir['name']);
-					doEcho(CRLF, 'Removing: ', $dirname, CRLF);
-					rmdirr($dirname);
+
+					// If the dir had any good files in it, and all of them were moved, then
+					// we can delete the dir.
+					if ($hasGood && $goodcount == 0) {
+						$dirname = preg_replace('@//@si', '/', $downloaddir.'/'.$dir['name']);
+						doEcho(CRLF, 'Removing: ', $dirname, CRLF);
+						rmdirr($dirname);
+					}
 				}
 			}
 		}
@@ -550,16 +556,13 @@
 						if ($config['daemon']['autotv']['showmanage']) {
 							$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']).')';
 						}
-					if (count(items) > 0 && $optimal != -1) {
+					if (count($items) > 0 && $optimal != -1) {
 						$best = $items[$optimal];
 						$bestid = (int)$best->nzbid;
 
-						if (isset($best->nzbtype)) {
-							if ($nzbtype != 'newzbin') {
-								$nzbtype = '_' . $best->nzbtype;
-							}
-						} else {
-							$nzbtype = '';
+						$nzbtype = '';
+						if (isset($best->nzbtype) && $best->nzbtype != 'newzbin') {
+							$nzbtype = '_' . $best->nzbtype;
 						}
 						
 						doEcho('Optimal: ', $optimal, CRLF);

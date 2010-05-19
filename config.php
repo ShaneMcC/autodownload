@@ -55,7 +55,8 @@
 	$config['daemon']['reindex']['dirs'] = array('Unwatched', 'Watched');
 	// Base directory to reindex into
 	$config['daemon']['reindex']['basedir'] = '/media/data/TV/';
-	// Base directory to reindex from
+	// Base directory to reindex from.
+	// This can also be an array of directories.
 	$config['daemon']['reindex']['downloaddir'] = '/media/data/nzb/Automatic';
 	
 	// When reindexing, ignore episodes that end up as 0x00.

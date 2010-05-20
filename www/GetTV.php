@@ -115,8 +115,11 @@
 			echo '  <tr>'.CRLF;
 			echo '    <th>Actions</th>'.CRLF;
 			echo '    <td colspan=5>';
-			if (!$nodownload) { 
+			if (!$nodownload) {
 				echo '[<a href="GetPost.php?', ($raw ? 'rawid[]' : 'nzbid'), '=', $id, '&', (!empty($nzbtype) ? 'nzbtype='.$nzbtype : ''), '&', GetLink($show, 512, 'show'), '">Download</a>]';
+			}
+			if (isset($item->link)) {
+				echo '[<a href="', $item->link, '">View Report</a>]';
 			}
 			echo '</td>'.CRLF;
 			echo '  </tr>'.CRLF;

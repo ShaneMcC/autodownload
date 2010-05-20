@@ -1051,39 +1051,46 @@
 		}
 	}
 
-	/**
-	 * Download an NZBID from nzbmatrix.
-	 *
-	 * @param $nzbid ID To download
-	 * @param $name Optional name to pass
-	 * @return Array containing the output from the downloader, and the status code.
-	 */
-	function downloadNZB_nzbmatrix($nzbid, $name = '') {
-		global $config;
-		$ch = curl_init();
-		$data = array('username' => $config['search']['nzbmatrix_username'], 'apikey' => $config['search']['nzbmatrix_apikey'], 'id' => $nzbid);
-		$url = 'http://nzbmatrix.com/api-nzb-download.php?';
-		foreach ($data as $k => $v) {
-			$url .= '&';
-			$url .= $k;
-			$url .= '=';
-			$url .= urlencode($v);
+	$dl_file = dirname(__FILE__).'/functions.downloader.php';
+	if (file_exists($dl_file)) {
+		include_once($dl_file);
+	}
+
+	if (!function_exists('downloadNZB_nzbmatrix')) {
+		/**
+		* Download an NZBID from nzbmatrix.
+		*
+		* @param $nzbid ID To download
+		* @param $name Optional name to pass
+		* @return Array containing the output from the downloader, and the status code.
+		*/
+		function downloadNZB_nzbmatrix($nzbid, $name = '') {
+			global $config;
+			$ch = curl_init();
+			$data = array('username' => $config['search']['nzbmatrix_username'], 'apikey' => $config['search']['nzbmatrix_apikey'], 'id' => $nzbid);
+			$url = 'http://nzbmatrix.com/api-nzb-download.php?';
+			foreach ($data as $k => $v) {
+				$url .= '&';
+				$url .= $k;
+				$url .= '=';
+				$url .= urlencode($v);
+			}
+			curl_setopt($ch, CURLOPT_URL, $url);
+			curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
+			$data = curl_exec($ch);
+			if (preg_match('@error:please_wait_([0-9]+)@', $data, $matches)) {
+				// Ack, we hit the API limit. Lets wait and then try again.
+				sleep(((int)$matches[1]) + 1);
+				return downloadNZB_nzbmatrix($nzbid, $name);
+			}
+			$data = gzinflate(substr($data, 10));
+			$file = tempnam("/tmp", "DNZB.");
+			file_put_contents($file, $data);
+			chmod($file, 0777);
+			$result = downloadFromFile($file, $name);
+			@unlink($file);
+			return $result;
 		}
-		curl_setopt($ch, CURLOPT_URL, $url);
-		curl_setopt($ch, CURLOPT_RETURNTRANSFER, 1);
-		$data = curl_exec($ch);
-		if (preg_match('@error:please_wait_([0-9]+)@', $data, $matches)) {
-			// Ack, we hit the API limit. Lets wait and then try again.
-			sleep(((int)$matches[1]) + 1);
-			return downloadNZB_nzbmatrix($nzbid, $name);
-		}
-		$data = gzinflate(substr($data, 10));
-		$file = tempnam("/tmp", "DNZB.");
-		file_put_contents($file, $data);
-		chmod($file, 0777);
-		$result = downloadFromFile($file, $name);
-		@unlink($file);
-		return $result;
 	}
 
 	/**

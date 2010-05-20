@@ -360,6 +360,7 @@
 		
 		echo "\t".'<item>'.CRLF;
 		echo "\t\t".'<nzbid>'.$nzbid.'</nzbid>'.CRLF;
+		echo "\t\t".'<link>http://nzbmatrix.com/nzb-details.php?id='.$nzbid.'</link>'.CRLF;
 		echo "\t\t".'<name>'.$name.'</name>'.CRLF;
 		echo "\t\t".'<rawname>'.$rawname.'</rawname>'.CRLF;
 		echo "\t\t".'<downloadable></downloadable>'.CRLF;

@@ -30,12 +30,20 @@
 		doReport(array('source' => 'GetPost', 'message' => sprintf('Beginning manual download of: %s %dx%02d [%s] (NZB: %d)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $_REQUEST['nzbid'], $extra)));
 	}
 
-	// URL to newzbin page.
+	// URL to download page.
 	if (isset($_REQUEST['nzb'])) {
-		$pattern = '@(.*)/browse/post/([0-9]+).*@i'; preg_match($pattern, $_REQUEST['nzb'], $matches);
+		$pattern = '@(.*)/browse/post/([0-9]+).*@i';
 		
-		$title .= ' - '.$_REQUEST['nzb'];
-		if (isset($matches[2])) { $posts[] = $matches[2]; }
+		$nzbm_pattern = '@(.*)nzbmatrix.*/nzb-details\.php\?id=([0-9]+).*@i';
+
+		if (preg_match($pattern, $_REQUEST['nzb'], $matches)) {
+			$title .= ' - '.$_REQUEST['nzb'];
+			if (isset($matches[2])) { $posts[] = $matches[2]; }
+		} else if (preg_match($nzbm_pattern, $_REQUEST['nzb'], $matches)) {
+			$title .= ' - '.$_REQUEST['nzb'];
+			if (isset($matches[2])) { $posts[] = $matches[2]; }
+			$_REQUEST['nzbtype'] = 'nzbmatrix';
+		}
 		
 	// A single NZB.
 	} else if (isset($_REQUEST['nzbid']) || isset($_REQUEST['post'])) {
@@ -120,7 +128,7 @@
 		flush();
 		$querynumber++;
 
-		echo 'Asking hellahella to download: ', $post, CRLF;
+		echo 'Asking downloader to download: ', $post, CRLF;
 		$result = call_user_func('downloadNZB'.$nzbtype, $post, $directfilename);
 		var_dump($result['output']);
 	}
@@ -138,7 +146,7 @@
 		flush();
 		$querynumber++;
 
-		echo 'Asking hellahella to download: ', $post, CRLF;
+		echo 'Asking downloader to download: ', $post, CRLF;
 		$result = call_user_func('downloadURL'.$nzbtype, $post, $directfilename);
 		var_dump($result['output']);
 	}
@@ -156,7 +164,7 @@
 		flush();
 		$querynumber++;
 
-		echo 'Asking hellahella to download: ', $post, CRLF;
+		echo 'Asking downloader to download: ', $post, CRLF;
 		$result = call_user_func('downloadDirect'.$nzbtype, $post, $directfilename);
 		var_dump($result['output']);
 	}

@@ -203,18 +203,20 @@
 	 * @return simplexml instance representing the search results, or false if the
 	 *         search page was unable to be opened.
 	 */
-	function searchFor($searchTerm, $debug = false, $provider = '') {
+	function searchFor($searchTerm, $debug = false, $provider = null) {
 		global $config;
+
+		$user = ($provider != null && isset($config['search'][$provider]['username'])) ? $config['search'][$provider]['username'] : $config['search']['username'];
+		$pass = ($provider != null && isset($config['search'][$provider]['password'])) ? $config['search'][$provider]['password'] : $config['search']['password'];
 		
 		$url = ($provider == null) ? $config['search']['provider'] : $provider;
-		$url .= '?username='.urlencode($config['search']['username']);
-		$url .= '&password='.urlencode($config['search']['password']);
+		$url .= '?username='.urlencode($user);
+		$url .= '&password='.urlencode($pass);
 		$url .= '&sizesort';
 		$url .= '&limit=100';
 		$url .= '&search='.urlencode($searchTerm);
-
 		$page = file_get_contents($url);
-
+		echo $url;
 		if ($debug) { echo '<pre>'.htmlspecialchars($page).'</pre>'; }
 		return ($page === false) ? false : simplexml_load_string($page);
 	}

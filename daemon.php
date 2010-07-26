@@ -51,10 +51,10 @@
 			case DAEMONTOOLS_ALREADY_RUNNING:
 				doEcho('Already running, terminating.'.CRLF);
 				break;
-			// Currently unhandled callbacks
 			case DAEMONTOOLS_SIGNAL:
 				handleSignal($args['signal']);
 				break;
+			// Currently unhandled callbacks
 			case DAEMONTOOLS_STARTED:
 			case DAEMONTOOLS_STOPPED:
 			case DAEMONTOOLS_EXITING:
@@ -399,6 +399,7 @@
 				if (isset($dir['contents'])) {
 					$deleteDir = false;
 					// Check if it matches any of the patterns.
+					doEcho('Dir: ', $dir['name'], CRLF);
 					$folderinfo = getEpisodeInfo($folderpatterns, $dir['name']);
 					$hasGood = false;
 					$goodcount = 0;

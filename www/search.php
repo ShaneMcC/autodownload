@@ -6,9 +6,12 @@
 
 	echo '          <form method="GET" action="">', CRLF;
 	echo '                  <div class="center">', CRLF;
+	if (isset($_REQUEST['api'])) {
+		echo '                          <input type="hidden" name="api" size=25 value="', htmlentities($_REQUEST['api']), '">', CRLF;
+	}
 	echo '                          <div class="formrow">', CRLF;
 	echo '                                  <span class="labelmed">Search query (May not be blank):</span>', CRLF;
-	echo '                                  <span class="inputreg"><input name="search" size=25></span>', CRLF;
+	echo '                                  <span class="inputreg"><input name="search" size=25 value="', htmlentities($_REQUEST['search']), '"></span>', CRLF;
 	echo '                          </div>', CRLF;
 	echo '                          <div class="formrow">', CRLF;
 	echo '                                  <span class="labelmed">&nbsp;</span>', CRLF;
@@ -23,7 +26,7 @@
 
 	$searchString = $_REQUEST['search'];
 
-	echo 'Searching for: <strong>', $searchString,'</strong>', EOL;
+	echo 'Searching for: <strong>', htmlentities($searchString),'</strong>', EOL;
 
 	$providers['api'] = 'http://localhost/new/nzb/api.php';
 	$providers['nzbmatrix'] = 'http://localhost/new/nzb/nzbmatrix.php';
@@ -60,6 +63,7 @@
 	ob_start();
 	$search = searchFor($searchString, true, $providers[$providerapi]);
 	$buffer = ob_get_contents();
+//	echo $buffer;
 	ob_end_clean();
 	echo '-->';
 	if (isset($search->search->actual_search)) {
@@ -96,6 +100,7 @@
 			$groups = implode($groups, ', ');
 			$status = (string)$item->status;
 			if (isset($item->raw)) { $raw = true; $status .= ' (RAW)'; } else { $raw = false; }
+			if (isset($item->nzbtype)) { $nzbtype = (string)$item->nzbtype; } else { $nzbtype = ''; }
 			$comments = (int)$item->comments['count'];
 			if ($comments > 0) { $comments .= ' (<a href="'.(string)$item->comments.'">View</a>)'; }
 			
@@ -151,9 +156,13 @@
 			echo '    <th>Actions</th>'.CRLF;
 			echo '    <td colspan=5>';
 			if (!$nodownload) { 
-				echo '[<a href="GetPost.php?'.($raw ? 'rawid[]' : 'nzbid').'=', $id, '&title=', urlencode($name) , '">Download</a>] - ';
+				echo '[<a href="GetPost.php?', ($raw ? 'rawid[]' : 'nzbid'), '=', $id, '&', (!empty($nzbtype) ? 'nzbtype='.$nzbtype : ''), '&title=', urlencode($name) , '">Download</a>] - ';
 			}
-			echo '[<a href="https://www.newzbin.com/browse/post/', $id, '">View Post</a>]';
+                        if (isset($item->link)) {
+                                echo '[<a href="', $item->link, '">View Report</a>]';
+                        } else {
+				echo '[<a href="https://www.newzbin.com/browse/post/', $id, '">View Post</a>]';
+			}
 			echo '</td>'.CRLF;
 			echo '  </tr>'.CRLF;
 			echo '</table>'.CRLF;

@@ -212,7 +212,7 @@
 		$searchurl .= '&fpn=f';
 
 		$loginurl = '/account/login/';
-		$address = 'v3.newzbin.com';
+		$address = 'www.newzbin.com';
 		$captcha = $global['captcha'];
 		$captchaid = $global['captchaid'];
 		$data = 'ret_url='.urlencode($searchurl).'&username='.$global['username'].'&password='.$global['password'].'&keyword='.$captcha.'&CaptchaID='.$captchaid;
@@ -241,7 +241,6 @@
 				$out .= 'Content-Length: '.strlen($data).CRLF;
 				$out .= CRLF;
 				$out .= $data;
-	
 				$cookies = array();
 
 				fwrite($fp, $out);
@@ -348,7 +347,7 @@
 //	print_r($data);
 //	echo "-->";
 	
-	$metapattern = '<h3>.*of (.*) files</h3>';
+	$metapattern = '<h3>.*of (.*) files[^<]+</h3>';
 	$metapattern .= '(?:.*<a rel="last" href=".*page=([0-9]+).*">last</a>)?';
 
 	preg_match('@'.$metapattern.'@U', $data, $metamatches);

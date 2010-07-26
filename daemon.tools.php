@@ -166,6 +166,7 @@
 		// State Variables
 		$__daemontools['forked'] = false;
 		$__daemontools['loop'] = true;
+		$__daemontools['mypid'] = -1;
 		// usleep takes millionth of a second, not thousanth like expected.
 		$__daemontools['usleep_time'] = $looptime * 1000;
 		
@@ -189,7 +190,8 @@
 			}
 			
 			// Store the PID.
-			file_put_contents($__daemontools['pid'], getmypid());
+			$__daemontools['mypid'] = getmypid();
+			file_put_contents($__daemontools['pid'], $__daemontools['mypid']);
 		}
 		
 		// Add handler for the SIGTERM and SIGHUP signals
@@ -214,9 +216,12 @@
 			usleep($__daemontools['usleep_time']);
 		}
 		
-		// Try to delete the pid if we exited cleanly.
+		// Try to delete the pid if we exited cleanly, and its ours.
 		if (file_exists($__daemontools['pid'])) {
-			unlink($__daemontools['pid']);
+			$pidnum = file_get_contents($__daemontools['pid']);
+			if ($pidnum == $__daemontools['mypid']) {
+				unlink($__daemontools['pid']);
+			}
 		}
 		
 		// Let the application know we are exiting

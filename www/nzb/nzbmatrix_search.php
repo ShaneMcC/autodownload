@@ -215,7 +215,7 @@
 	// Extract season/episode
 	if (preg_match('/([0-9]+)[xX]([0-9]+)/', $global['ACTUAL_SEARCH'], $m)) {
 		$global['ACTUAL_SEARCH'] = preg_replace('/([0-9]+)[xX]([0-9]+)/', '', $global['ACTUAL_SEARCH']);
-		// $global['ACTUAL_SEARCH'] .= sprintf(' (S%02dE%02d or S%1$dE%2$02d or S%1$02dE%2$d or S%1$dE%2$d)', $m[1], $m[2]);
+		// $global['ACTUAL_SEARCH'] .= sprintf(' (S%02dE%02d|S%1$dE%2$02d|S%1$02dE%2$d|S%1$dE%2$d|%1$dx%2$02d)', $m[1], $m[2]);
 		$global['ACTUAL_SEARCH'] .= sprintf(' S%02dE%02d', $m[1], $m[2]);
 		// $global['ACTUAL_SEARCH'] .= ' nzb';
 	}
@@ -287,7 +287,7 @@
 
 	$pattern = '<td class="nzbtable_data"';
 	$pattern .= '.*nzb-details.php\?id=([0-9]+)&amp;'; // Post ID
-	$pattern .= '.*<b>([^<]+)</b>'; // Name
+	$pattern .= '.*title="([^"]+)"'; // Name
 	$pattern .= '.*<b>Added to Usenet: </B>([^,]+),'; // Post Date
 	$pattern .= '.*<b>Added to Index: </B>([^,]+),'; // Report Date
 	$pattern .= '.*<b>&nbsp;Size: </B>([^\s]+) ([^<]+)<BR>'; // Size
@@ -350,6 +350,8 @@
 		$nzbid = trim($matches[$matchid['id']][$j]);
 
 		$name = trim($matches[$matchid['name']][$j]);
+		$name = str_replace('&nbsp;', ' ', $name);
+		$name = html_entity_decode($name);
 		$rawname = $name;
 		// PostProcess name.
 		$name = str_replace('.', ' ', $name);
@@ -362,7 +364,7 @@
 		echo "\t\t".'<nzbid>'.$nzbid.'</nzbid>'.CRLF;
 		echo "\t\t".'<link>http://nzbmatrix.com/nzb-details.php?id='.$nzbid.'</link>'.CRLF;
 		echo "\t\t".'<name>'.$name.'</name>'.CRLF;
-		echo "\t\t".'<rawname>'.$rawname.'</rawname>'.CRLF;
+		echo "\t\t".'<rawname>'.htmlspecialchars($rawname).'</rawname>'.CRLF;
 		echo "\t\t".'<downloadable></downloadable>'.CRLF;
 		echo "\t\t".'<nzbtype>nzbmatrix</nzbtype>'.CRLF;
 //		echo "\t\t".'<category>'.trim($matches[$matchid['category']][$j]).'</category>'.CRLF;

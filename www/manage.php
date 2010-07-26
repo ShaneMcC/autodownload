@@ -55,7 +55,8 @@
 		head('Series Downloader :: Manage :: '.$_GET['show'], '', getCSS(true, false));
 		$show = getShowInfo($_GET['show']);
 		if ($show['known']) {
-			echo '<h2>', $_GET['show'], ' is now ',($show['automatic'] ? 'not ' : '' ),'automatic.</h2>';
+			$color = $show['automatic'] ? 'red' : 'green';
+			echo '<h2 style="color: ', $color, '">', $_GET['show'], ' is now ',($show['automatic'] ? 'not ' : '' ),'automatic.</h2>';
 			addShow($_GET['show'], $show, !$show['automatic']);
 		} else {
 			echo '<h2>', $_GET['show'], ' is not known.</h2>';

@@ -46,6 +46,7 @@
 		$page = file_get_contents($searchurl, false, $context);
 		$page = preg_replace("/(<\/?)(\w+):([^>]*>)/", "$1$2_$3", $page);
 		$xml = simplexml_load_string($page);
+
 		return $xml->channel;
 	}
 	

@@ -29,10 +29,21 @@
 	
 	// Link to manage.php when starting a new download.
 	$config['daemon']['autotv']['showmanage'] = true;
+
+	// What search providers to use for searching?
+	// '' for default, this can be a single provider, or an array.
+	$config['daemon']['autotv']['providers'] = '';
 	
 	// Should all 1x01's be downloaded ?
 	// This is ignored if only-important is true.
 	$config['daemon']['autotv']['allfirst'] = true;
+
+	// Which extra days should we try to download a show?
+	// example: array('1', '6'); would try find the show on the day it is released
+	// 1 day after, and 6 days afterwards.
+	// Only integer values inside an array will be counted.
+	// This can also allow for checking for things in advance also.
+	$config['daemon']['autotv']['tryagain'] = array('1');
 	
 	// Times that the daemon should check for new TV.
 	// This is an array containing "time arrays".
@@ -43,7 +54,7 @@
 	// Example: array(array('hour' => '03,04,05,06,09', 'minute' => '00,30'));
 	// This is checked every minute
 	$config['daemon']['autotv']['times'] = array(array('hour' => '03,04,05,06,09', 'minute' => '00,30'),
-	                                             array('hour' => '02,23', 'minute' => '30'),
+	                                             array('hour' => '02,23,20', 'minute' => '30'),
 	                                            );
 	// Same as above, but for running reindex.
 	$config['daemon']['reindex']['times'] = array(array('minute' => '00,15,30,45'));

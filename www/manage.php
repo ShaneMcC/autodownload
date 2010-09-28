@@ -42,7 +42,8 @@
 			echo '  <tr>', CRLF;
 			echo '    <th>Actions</th>', CRLF;
 			echo '    <td colspan=5>';
-			echo '[<a href="?show='.urlencode($_GET['show']).'&toggleAutomatic">Set automatic to ', ($show['automatic'] ? 'false' : 'true' ) ,'</a>] - ';
+			$autoType = ($show['automatic'] ? 'false' : 'true' );
+			echo '[<a href="?show=', urlencode($_GET['show']), '&toggleAutomatic=', $autoType, '">Set automatic to ', $autoType ,'</a>] - ';
 			echo '[<a href="series.php?search='.urlencode($_GET['show']).'">Search for Series</a>]';
 			echo '</td>', CRLF;
 			echo '  </tr>', CRLF;
@@ -54,10 +55,13 @@
 	} else if (isset($_GET['show']) && isset($_GET['toggleAutomatic']) ) {
 		head('Series Downloader :: Manage :: '.$_GET['show'], '', getCSS(true, false));
 		$show = getShowInfo($_GET['show']);
+
+		$newValue = !empty($_GET['toggleAutomatic']) ? (strtolower($_GET['toggleAutomatic']) == 'true') : !$show['automatic'];
+
 		if ($show['known']) {
-			$color = $show['automatic'] ? 'red' : 'green';
-			echo '<h2 style="color: ', $color, '">', $_GET['show'], ' is now ',($show['automatic'] ? 'not ' : '' ),'automatic.</h2>';
-			addShow($_GET['show'], $show, !$show['automatic']);
+			$color = $newValue ? 'green' : 'red';
+			echo '<h2 style="color: ', $color, '">', $_GET['show'], ' is now ',($newValue ? '' : 'not ' ),'automatic.</h2>';
+			addShow($_GET['show'], $show, $newValue);
 		} else {
 			echo '<h2>', $_GET['show'], ' is not known.</h2>';
 		}

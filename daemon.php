@@ -506,98 +506,136 @@
 		global $config, $daemon;
 		
 		doCommands('pre_checkauto');
+
+		// Get days to check.
+		$checkDays = array('0');
+		if (isset($config['daemon']['autotv']['tryagain']) && is_array($config['daemon']['autotv']['tryagain'])) {
+			foreach ($config['daemon']['autotv']['tryagain'] as $day) {
+				if (preg_match('@^-?[0-9]+$@', $day)) {
+					$checkDays[] = (0 - $day);
+				}
+			}
+		}
+		$checkDays = array_unique($checkDays);
+		sort($checkDays, SORT_NUMERIC);
+
+		$daemonProviders = $config['daemon']['autotv']['providers'];
+		if ($daemonProviders == '' || (is_array($daemonProviders) && count($daemonProviders) == 0)) { $daemonProviders = null; }
+
+		if (!is_array($daemonProviders)) {
+			$daemonProviders = array($daemonProviders);
+		}
 		
 		// Posts we need to download.
 		$posts = array();
 		
 		doReport(array('source' => 'daemon::handleCheckAuto', 'message' => 'Beginning Auto Download Check.'));
 		doEcho('Trying Auto Download..', CRLF);
-		// Look at all the shows that aired yesterday
-		foreach (getShows(true, -1, -1, false, $config['autodownload']['source']) as $show) {
-//		foreach (getShows(true, strtotime("03/19/2010"), -1, false, $config['autodownload']['source']) as $show) {
-			$info = $show['info'];
-			$firstep = ((int)$show['season'] == 1 && (int)$show['episode'] == 1);
-			$first = ($firstep && $config['daemon']['autotv']['allfirst']);
-			// Make sure the show is known to the DB.
-			if ($config['daemon']['autotv']['autodb'] && !$info['known']) {
-				// Add show.
-				$autoautomatic = ($config['daemon']['autotv']['autoautomatic'] == 1 || ($config['daemon']['autotv']['autoautomatic'] == 2 && $firstep));
-				$result = addShow($show['name'], $show['info'], $autoautomatic, $show['sources']);
-				if ($result == 0 && $autoautomatic || (!$autoautomatic && !$config['daemon']['autotv']['onlyannounceautomatic'])) {
-					$url = $config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']);
-					doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Discovered new (%s) show: %s [Manage: %s]', ($autoautomatic ? 'automatic' : 'manual'), $show['name'], $url)));
+		// Look at all the shows that aired the days we want.
+		foreach ($checkDays as $day) {
+			$startTime = strtotime('+'.($day - 1).' days 00:00');
+			$endTime = strtotime('+'.($day - 1).' days 00:00');
+
+			doEcho('Trying for day: ', date('r', $startTime), CRLF);
+
+			foreach (getShows(true, $startTime, $endTime, false, $config['autodownload']['source']) as $show) {
+//			foreach (getShows(true, strtotime("03/19/2010"), -1, false, $config['autodownload']['source']) as $show) {
+				$info = $show['info'];
+				$firstep = ((int)$show['season'] == 1 && (int)$show['episode'] == 1);
+				$first = ($firstep && $config['daemon']['autotv']['allfirst']);
+				// Make sure the show is known to the DB.
+				if ($config['daemon']['autotv']['autodb'] && !$info['known']) {
+					// Add show.
+					$autoautomatic = ($config['daemon']['autotv']['autoautomatic'] == 1 || ($config['daemon']['autotv']['autoautomatic'] == 2 && $firstep));
+					$result = addShow($show['name'], $show['info'], $autoautomatic, $show['sources']);
+					if ($result == 0 && $autoautomatic || (!$autoautomatic && !$config['daemon']['autotv']['onlyannounceautomatic'])) {
+						$url = $config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']);
+						doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Discovered new (%s) show: %s [Manage: %s]', ($autoautomatic ? 'automatic' : 'manual'), $show['name'], $url)));
+					}
 				}
-			}
-			// Check if this show is marked as automatic, (and is marked as important if onlyimportant is set true)
-			// Also check that the show hasn't already been downloaded.
-			$important = (($info['important'] && $config['download']['onlyimportant']) || !$config['download']['onlyimportant']);
-			if (($first || goodSource($show)) && ($info['automatic'] || $first) && $important && (isset($daemon['cli']['autotv-force']) || !hasDownloaded($show['name'], $show['season'], $show['episode']))) {
-				doEcho('Show: ', $show['name'], CRLF);
-				// Search for this show, and get the optimal match.
-				ob_start();
-				$search = searchFor(getSearchString($show), false);
-				$buffer = ob_get_contents();
-				ob_end_clean();
-				
-				// Check for errors
-				if (preg_match('@function.file-get-contents</a>]: (.*)  in@U', $buffer, $matches)) {
-					doEcho('An error occured loading the search provider: ', $matches[1], CRLF);
-				} else if ($search === false) {
-					doEcho('An error occured getting the search results: The search provider could not be loaded', CRLF);
-				} else  if ($search->error['message'] && $search->error['message'] != '') {
-					doEcho('An error occured getting the search results: ', (string)$search->error['message'], CRLF);
-				} else {
-					// No errors, get the best item
-					$items = $search->item;
-					doEcho('Items: ');
-					doPrintR($items);
-					$optimal = GetBestOptimal($search->xpath('item'), $info['size'], false, true, $show);
-					// If a best item was found
+				// Check if this show is marked as automatic, (and is marked as important if onlyimportant is set true)
+				// Also check that the show hasn't already been downloaded.
+				$important = (($info['important'] && $config['download']['onlyimportant']) || !$config['download']['onlyimportant']);
+				if (($first || goodSource($show)) && ($info['automatic'] || $first) && $important && (isset($daemon['cli']['autotv-force']) || !hasDownloaded($show['name'], $show['season'], $show['episode']))) {
+					doEcho('Show: ', $show['name'], CRLF);
+					$items = array();
+					
+					foreach ($daemonProviders as $provider) {
+						// Search for this show, and get the optimal match.
+						ob_start();
+						$search = searchFor(getSearchString($show), false, $provider);
+						$buffer = ob_get_contents();
+						ob_end_clean();
+
+						// Check for errors
+						if (preg_match('@function.file-get-contents</a>]: (.*)  in@U', $buffer, $matches)) {
+							doEcho('An error occured loading the search provider: ', $matches[1], CRLF);
+						} else if ($search === false) {
+							doEcho('An error occured getting the search results: The search provider could not be loaded', CRLF);
+						} else  if ($search->error['message'] && $search->error['message'] != '') {
+							doEcho('An error occured getting the search results: ', (string)$search->error['message'], CRLF);
+						} else {
+							$i = $search->xpath('item');
+ 							foreach ($i as $item) {
+								$items[] = $item;
+							}
+						}
+					}
+
+					if (count($items) > 0) {
+						// No errors, get the best item
+						doEcho('Items: ');
+						doPrintR($items);
+						$optimal = GetBestOptimal($items, $info['size'], false, true, $show);
+						// If a best item was found
 						$extra = '';
 						if ($config['daemon']['autotv']['showmanage']) {
 							$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($show['name']).')';
 						}
-					if (count($items) > 0 && $optimal != -1) {
-						$best = $items[$optimal];
-						$bestid = (int)$best->nzbid;
+						if (count($items) > 0 && $optimal != -1) {
+							doEcho('Found something.');
+							$best = $items[$optimal];
+							$bestid = (int)$best->nzbid;
 
-						$nzbtype = '';
-						if (isset($best->nzbtype) && $best->nzbtype != 'newzbin') {
-							$nzbtype = '_' . $best->nzbtype;
-						}
-						
-						doEcho('Optimal: ', $optimal, CRLF);
-						doEcho('Best: ', $bestid, CRLF);
-						doEcho('NZB Type: ', (empty($nzbtype) ? 'newzbin' : substr($nzbtype, 1)), CRLF);
-						
-						// Try to download.
-						$directfilename = sprintf('%s - %dx%02d - %s', $show['name'], $show['season'], $show['episode'], $show['title']);
-						if (isset($best->raw)) {
-							if (isset($best->files->file)) {
-								$bestid = '';
-								foreach ($best->files->file as $file) {
-									if (!empty($bestid)) { $bestid .= ','; }
-									$bestid .= $file;
+							$nzbtype = '';
+							if (isset($best->nzbtype) && $best->nzbtype != 'newzbin') {
+								$nzbtype = '_' . $best->nzbtype;
+							}
+
+							doEcho('Optimal: ', $optimal, CRLF);
+							doEcho('Best: ', $bestid, CRLF);
+							doEcho('NZB Type: ', (empty($nzbtype) ? 'newzbin' : substr($nzbtype, 1)), CRLF);
+
+							// Try to download.
+							$directfilename = sprintf('%s - %dx%02d - %s', $show['name'], $show['season'], $show['episode'], $show['title']);
+							if (isset($best->raw)) {
+								if (isset($best->files->file)) {
+									$bestid = '';
+									foreach ($best->files->file as $file) {
+										if (!empty($bestid)) { $bestid .= ','; }
+										$bestid .= $file;
+									}
+									$result = call_user_func('downloadDirect'.$nzbtype, $bestid, $directfilename);
+								} else {
+									$result = array('status' => false, 'output' => 'No files');
 								}
-								$result = call_user_func('downloadDirect'.$nzbtype, $bestid, $directfilename);
 							} else {
-								$result = array('status' => false, 'output' => 'No files');
+								$result = call_user_func('downloadNZB'.$nzbtype, $bestid, $directfilename);
+							}
+
+							doEcho('Result: ');
+							doPrintR($result);
+							if ($result['status']) {
+								// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
+								setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
+								doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']), $extra)));
+							} else {
+								doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Failed to start automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']), $extra)));
 							}
 						} else {
-							$result = call_user_func('downloadNZB'.$nzbtype, $bestid, $directfilename);
+							doEcho('Not something.');
+							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('No downloads found for: %s %dx%02d [%s] %s', $show['name'], $show['season'], $show['episode'], $show['title'], $extra)));
 						}
-						
-						doEcho('Result: ');
-						doPrintR($result);
-						if ($result['status']) {
-							// Hellanzb tells us that the nzb was added ok, so mark the show as downloaded
-							setDownloaded($show['name'], $show['season'], $show['episode'], $show['title']);
-							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Beginning automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']), $extra)));
-						} else {
-							doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('Failed to start automatic download of: %s %dx%02d [%s] (NZB: %d, Source: %s)%s', $show['name'], $show['season'], $show['episode'], $show['title'], $bestid, implode(', ', $show['sources']), $extra)));
-						}
-					} else {
-						doReport(array('source' => 'daemon::handleCheckAuto', 'message' => sprintf('No downloads found for: %s %dx%02d [%s] %s', $show['name'], $show['season'], $show['episode'], $show['title'], $extra)));
 					}
 				}
 			}

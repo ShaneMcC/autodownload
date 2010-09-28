@@ -215,8 +215,8 @@
 	// Extract season/episode
 	if (preg_match('/([0-9]+)[xX]([0-9]+)/', $global['ACTUAL_SEARCH'], $m)) {
 		$global['ACTUAL_SEARCH'] = preg_replace('/([0-9]+)[xX]([0-9]+)/', '', $global['ACTUAL_SEARCH']);
-		// $global['ACTUAL_SEARCH'] .= sprintf(' (S%02dE%02d|S%1$dE%2$02d|S%1$02dE%2$d|S%1$dE%2$d|%1$dx%2$02d)', $m[1], $m[2]);
-		$global['ACTUAL_SEARCH'] .= sprintf(' S%02dE%02d', $m[1], $m[2]);
+		$global['ACTUAL_SEARCH'] .= sprintf(' (S%02dE%02d|S%1$dE%2$02d|S%1$02dE%2$d|S%1$dE%2$d|%1$dx%2$02d)', $m[1], $m[2]);
+		// $global['ACTUAL_SEARCH'] .= sprintf(' S%02dE%02d', $m[1], $m[2]);
 		// $global['ACTUAL_SEARCH'] .= ' nzb';
 	}
 	$global['ACTUAL_SEARCH'] = preg_replace('/\s+/', ' ', $global['ACTUAL_SEARCH']);
@@ -363,7 +363,7 @@
 		echo "\t".'<item>'.CRLF;
 		echo "\t\t".'<nzbid>'.$nzbid.'</nzbid>'.CRLF;
 		echo "\t\t".'<link>http://nzbmatrix.com/nzb-details.php?id='.$nzbid.'</link>'.CRLF;
-		echo "\t\t".'<name>'.$name.'</name>'.CRLF;
+		echo "\t\t".'<name>'.htmlspecialchars($name).'</name>'.CRLF;
 		echo "\t\t".'<rawname>'.htmlspecialchars($rawname).'</rawname>'.CRLF;
 		echo "\t\t".'<downloadable></downloadable>'.CRLF;
 		echo "\t\t".'<nzbtype>nzbmatrix</nzbtype>'.CRLF;

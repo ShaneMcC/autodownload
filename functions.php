@@ -381,7 +381,7 @@
 		global $config;
 		
 		foreach ($patterns as $pattern => $info) {
-			if (function_exists('doEcho')) { doEcho('Trying: ', $pattern, CRLF); }
+			// if (function_exists('doEcho')) { doEcho('Trying: ', $pattern, CRLF); }
 			if (preg_match($pattern, $name, $matches)) {
 				if (function_exists('doPrintR')) { doPrintR($matches); }
 				$result['pattern'] = $pattern;

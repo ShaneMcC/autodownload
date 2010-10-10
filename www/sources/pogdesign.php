@@ -24,6 +24,7 @@
 	}
 	
 	function get_page() {
+return '';
 		global $cat_page, $cat_host;
 		
 		$postdata = "timezone=".urlencode("US/Central");

@@ -244,7 +244,7 @@
 		global $config;
 		
 		$source = str_replace('../', '', $source);
-		return file_exists($config['tv']['filebase'].'/'.$source.'.php.ignore');
+		return file_exists($config['tv']['filebase'].'/'.$source.'.php.nomerge');
 	}
 
 	/**

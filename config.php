@@ -14,6 +14,10 @@
 	// Daemon log file/
 	$config['daemon']['logfile'] = dirname(__FILE__).'/daemon.log';
 
+	// How many different names should we try for a file before giving up
+	// moving it?
+	$config['daemon']['maxnames'] = 5;
+
 	// Automatically add new shows discovered to the database?
 	$config['daemon']['autotv']['autodb'] = true;
 	
@@ -330,6 +334,11 @@
 	//----------------------------------------------------------------------------
 	define('CRLF', "\r\n");
 	define('EOL', '<br>'.CRLF);
+
+	// Timezone to use for all time-related operations.
+	// This should be left as is!
+	date_default_timezone_set('Etc/GMT+0');
+	date_default_timezone_set('Etc/GMT-1');
 
 	// The type of times available to match in time arrays.
 	// 'timename' => 'format for date()'

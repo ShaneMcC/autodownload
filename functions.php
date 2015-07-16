@@ -266,9 +266,9 @@
 		$sep = '?';
 		if (!empty($extra)) { $url .= $sep.'extra='.$extra; $sep = '&'; }
 		if ($forcereload) { $url .= $sep.'forcereload'; $sep = '&'; }
-		
+
 		$page = file_get_contents($url);
-		
+
 		// if ($debug) { echo '<pre>'.htmlspecialchars($page).'</pre>'; }
 		return simplexml_load_string($page);
 	}

@@ -197,12 +197,14 @@
 	 * @return Filename based on $dest that isn't already in use.
 	 */
 	function getDestFile($dest) {
+		global $config;
 		$filename = explode('.', $dest);
 		$fileext = strtolower(array_pop($filename));
 		
 		$tempname = $dest;
 		$i = 0;
 		while (file_exists($tempname)) {
+			if ($i >= $config['daemon']['maxnames']) { return null; }
 			$newtempname = preg_replace('@\.'.$fileext.'$@', ' ('.$i++.').'.$fileext, $dest);
 			doEcho("\t\t\t", 'File "'.$tempname.'" already exists, trying: "'.$newtempname.'"', CRLF);
 			$tempname = $newtempname;
@@ -336,7 +338,7 @@
 								$targetname = sprintf('%s %dx%02d.%s', $info['name'], $info['season'], $info['episode'], $fileext);
 	
 								$dest = getDestFile(preg_replace('@//@si', '/', $targetdir.'/'.$targetname));
-								
+
 								doEcho("\t\t", 'Moving from: ', $source, CRLF);
 								doEcho("\t\t", 'Moving to: ', $dest, CRLF);
 								
@@ -345,7 +347,7 @@
 								
 								// Make sure the target directory exists
 								if (!file_exists($targetdir)) { mkdir($targetdir, 0777, true); }
-								if (!rename($source, $dest)) {
+								if ($dest == null || !rename($source, $dest)) {
 									// Rename failed.
 									// If the file still exists (its possible for a file to get lost
 									// in a failed rename) then readd the watch.
@@ -463,23 +465,29 @@
 								$source = preg_replace('@//@si', '/', $downloaddir.'/'.$dir['name'].'/'.$file['name']);
 								$dest = getDestFile(preg_replace('@//@si', '/', $targetdir.'/'.$targetname));
 
-								doEcho("\t\t", 'Moving from: ', $source, CRLF);
-								doEcho("\t\t", 'Moving to: ', $dest, CRLF);
-
-								$extra = '';
-								if ($config['daemon']['autotv']['showmanage']) {
-									$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($info['name']).')';
-								}
-								doReport(array('source' => 'daemon::handleReindex', 'message' => sprintf('Download Completed: %s %dx%02d%s', $info['name'], $info['season'], $info['episode'], $extra)));
-
-								// Move it.
-								if (rename($source, $dest)) {
-									$goodcount--;
-								}
-								if ($symlinkwatched) {
-									$link = getDestFile(preg_replace('@//@si', '/', $linkdir.'/'.$targetname));
-									doEcho("\t\t", 'Linking to: ', $link, CRLF);
-									symlink($dest, $link);
+								if ($dest == null) {
+									doEcho("\t\t", 'Unable to move from: ', $source, ' - rename count exceeded.', CRLF);
+								} else {
+									doEcho("\t\t", 'Moving from: ', $source, CRLF);
+									doEcho("\t\t", 'Moving to: ', $dest, CRLF);
+	
+									$extra = '';
+									if ($config['daemon']['autotv']['showmanage']) {
+										$extra .= ' (Manage: '.$config['daemon']['autotv']['manageurl'].'?show='.urlencode($info['name']).')';
+									}
+									doReport(array('source' => 'daemon::handleReindex', 'message' => sprintf('Download Completed: %s %dx%02d%s', $info['name'], $info['season'], $info['episode'], $extra)));
+	
+									// Move it.
+									if (rename($source, $dest)) {
+										$goodcount--;
+									}
+									if ($symlinkwatched) {
+										$link = getDestFile(preg_replace('@//@si', '/', $linkdir.'/'.$targetname));
+										if ($link != null) {
+											doEcho("\t\t", 'Linking to: ', $link, CRLF);
+											symlink($dest, $link);
+										}
+									}
 								}
 							}
 						}
